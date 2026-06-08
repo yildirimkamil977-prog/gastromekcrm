@@ -49,8 +49,8 @@ export default function Customers() {
 
   useEffect(() => { load(1); /* eslint-disable-next-line */ }, []);
   useEffect(() => {
-    const t = setTimeout(() => load(1), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => load(1), 300);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line
   }, [search, dateFrom, dateTo]);
 
