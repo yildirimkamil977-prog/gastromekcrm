@@ -1,6 +1,11 @@
 # Gastromek CRM - Product Requirements Document
 
-> Rebranded from **ArıCRM** to **Gastromek CRM** (2026-06-08). Corporate color **#0073c4** + white.
+> Rebranded from **ArıCRM** to **Gastromek CRM** (2026-06-08). Corporate color updated to **logo green #70c800** (was #0073c4) + white. Logo: Gastromek GmbH logo used in sidebar, mobile header, and login.
+
+## Branding & error localization — updated 2026-06-08
+- Brand color is the logo green **#70c800** (hover #5ba800, light #eef8df, dark #4e8a00). Applied via Tailwind `brand.*`, CSS vars `--primary/--ring/--chart-1` (HSL 86 100% 39%), `.nav-link.active`, PDF accent, login gradient, theme-color meta.
+- Logo image used across UI brand spots; PDF still uses the company's own `settings.logo_url` (configurable in Settings → Firma).
+- **Backend error messages localized on the frontend**: `src/i18n/errors.js` maps Turkish API `detail` strings → German (with regex patterns for dynamic ones) and network errors. `formatApiError()` localizes based on active language. Turkish keeps original strings.
 
 ## Internationalization (i18n) — added 2026-06-08
 - Default language: **German (de)**. **Turkish (tr)** kept as an option.

@@ -35,10 +35,7 @@ export default function Layout({ children }) {
           </Sheet>
 
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center font-heading font-bold text-xs">
-              GM
-            </div>
-            <span className="font-heading font-semibold text-slate-900">{t("brand.name")}</span>
+            <img src="https://customer-assets.emergentagent.com/job_7f4dcb13-bb80-4983-8764-b667de5bb352/artifacts/k8zjh8tf_gastromek-logo.png" alt="Gastromek" className="h-7 w-auto object-contain" />
           </div>
 
           <div className="w-9" />

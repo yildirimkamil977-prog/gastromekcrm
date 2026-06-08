@@ -1,4 +1,5 @@
 import axios from "axios";
+import { localizeError } from "../i18n/errors";
 
 const BASE = process.env.REACT_APP_BACKEND_URL;
 
@@ -14,11 +15,18 @@ let currentLocale = "de-DE";
 export function setLocale(locale) {
   currentLocale = locale || "de-DE";
 }
+function activeLang() {
+  return currentLocale && currentLocale.startsWith("tr") ? "tr" : "de";
+}
 
 export function formatApiError(err) {
+  const lang = activeLang();
   const d = err?.response?.data?.detail;
-  if (!d) return err?.message || "Bir hata oluştu";
-  if (typeof d === "string") return d;
+  if (!d) {
+    if (err?.message === "Network Error") return localizeError("__network__", lang);
+    return localizeError(err?.message || "Bir hata oluştu", lang);
+  }
+  if (typeof d === "string") return localizeError(d, lang);
   if (Array.isArray(d)) {
     return d
       .map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e)))

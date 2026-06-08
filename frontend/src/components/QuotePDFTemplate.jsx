@@ -54,12 +54,12 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
       }}
     >
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #0073c4", paddingBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #70c800", paddingBottom: 16 }}>
         <div style={{ maxWidth: "55%" }}>
           {company?.logo_url ? (
             <SafeImg src={company.logo_url} alt="logo" style={{ maxHeight: 60, maxWidth: 240, objectFit: "contain" }} />
           ) : (
-            <div style={{ fontSize: 22, fontFamily: "Outfit, sans-serif", fontWeight: 700, color: "#0073c4" }}>
+            <div style={{ fontSize: 22, fontFamily: "Outfit, sans-serif", fontWeight: 700, color: "#70c800" }}>
               {company?.company_name || t("brand.name")}
             </div>
           )}
@@ -75,7 +75,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
         </div>
 
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "Outfit, sans-serif", fontSize: 28, fontWeight: 700, color: "#0073c4", letterSpacing: 2 }}>
+          <div style={{ fontFamily: "Outfit, sans-serif", fontSize: 28, fontWeight: 700, color: "#70c800", letterSpacing: 2 }}>
             {t("pdf.heading")}
           </div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>
@@ -112,7 +112,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
       {/* Items */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 20, fontSize: 10 }}>
         <thead>
-          <tr style={{ background: "#0073c4", color: "#fff" }}>
+          <tr style={{ background: "#70c800", color: "#fff" }}>
             <th style={{ padding: "8px 6px", textAlign: "left", width: 40 }}>#</th>
             <th style={{ padding: "8px 6px", textAlign: "left", width: 70 }}>{t("pdf.thImage")}</th>
             <th style={{ padding: "8px 6px", textAlign: "left" }}>{t("pdf.thProduct")}</th>
@@ -163,7 +163,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
                 <td style={{ padding: "4px 10px", textAlign: "right", color: "#b91c1c" }}>- {formatMoney(discount_amount, currency)}</td>
               </tr>
             )}
-            <tr style={{ background: "#0073c4", color: "#fff" }}>
+            <tr style={{ background: "#70c800", color: "#fff" }}>
               <td style={{ padding: "10px", fontWeight: 700, lineHeight: 1.25 }}>
                 {t("pdf.grandTotal")}
                 <div style={{ fontSize: 8, fontWeight: 500, opacity: 0.9, letterSpacing: 1 }}>{t("pdf.vatIncluded")}</div>
@@ -229,7 +229,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
                 style={{
                   fontFamily: "'Whisper', cursive",
                   fontSize: 38,
-                  color: "#0073c4",
+                  color: "#70c800",
                   lineHeight: 1,
                   marginTop: 14,
                   minHeight: 42,
@@ -274,7 +274,7 @@ function SocialStrip({ company }) {
       style={{
         marginTop: 18,
         padding: "10px 14px",
-        background: "#0073c4",
+        background: "#70c800",
         color: "#ffffff",
         borderRadius: 6,
         display: "flex",

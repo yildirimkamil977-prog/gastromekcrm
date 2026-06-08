@@ -18,10 +18,10 @@ module.exports = {
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
                 brand: {
-                    DEFAULT: '#0073c4',
-                    hover: '#005ba1',
-                    light: '#e6f1f9',
-                    dark: '#004d85',
+                    DEFAULT: '#70c800',
+                    hover: '#5ba800',
+                    light: '#eef8df',
+                    dark: '#4e8a00',
                 },
                 card: {
                     DEFAULT: 'hsl(var(--card))',

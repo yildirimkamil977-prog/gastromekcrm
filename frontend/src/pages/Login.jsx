@@ -8,7 +8,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Loader2, Lock, Mail } from "lucide-react";
 
-const LOGO = "https://customer-assets.emergentagent.com/job_quote-crm-1/artifacts/6y5mv5wn_image.png";
+const LOGO = "https://customer-assets.emergentagent.com/job_7f4dcb13-bb80-4983-8764-b667de5bb352/artifacts/k8zjh8tf_gastromek-logo.png";
 const BG = "https://images.pexels.com/photos/33210357/pexels-photo-33210357.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1200";
 
 export default function Login() {
@@ -37,17 +37,14 @@ export default function Login() {
       <div
         className="hidden lg:flex relative items-end p-12 text-white"
         style={{
-          backgroundImage: `linear-gradient(135deg, rgba(0,77,133,0.85), rgba(0,115,196,0.7)), url(${BG})`,
+          backgroundImage: `linear-gradient(135deg, rgba(78,138,0,0.88), rgba(112,200,0,0.72)), url(${BG})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-white text-brand flex items-center justify-center font-heading font-bold">
-              GM
-            </div>
-            <span className="font-heading text-xl font-semibold">{t("brand.name")}</span>
+          <div className="inline-flex items-center gap-3 mb-8 bg-white rounded-2xl px-4 py-3 shadow-lg">
+            <img src={LOGO} alt="Gastromek" className="h-10 w-auto object-contain" />
           </div>
           <h2 className="font-heading text-4xl font-semibold leading-tight max-w-md">
             {t("login.heroTitle")}
@@ -68,8 +65,7 @@ export default function Login() {
         </div>
         <form onSubmit={submit} className="w-full max-w-md" data-testid="login-form">
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center font-heading font-bold">GM</div>
-            <span className="font-heading text-xl font-semibold">{t("brand.name")}</span>
+            <img src={LOGO} alt="Gastromek" className="h-9 w-auto object-contain" />
           </div>
           <h1 className="font-heading text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">
             {t("login.welcome")}

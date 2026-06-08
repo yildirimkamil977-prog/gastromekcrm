@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-const LOGO = "https://customer-assets.emergentagent.com/job_quote-crm-1/artifacts/6y5mv5wn_image.png";
+const LOGO = "https://customer-assets.emergentagent.com/job_7f4dcb13-bb80-4983-8764-b667de5bb352/artifacts/k8zjh8tf_gastromek-logo.png";
 
 const mainLinks = [
   { to: "/", key: "dashboard", icon: LayoutDashboard, testid: "nav-dashboard" },
@@ -42,11 +42,9 @@ export default function Sidebar({ onNavigate }) {
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-full lg:h-screen lg:sticky lg:top-0" data-testid="sidebar">
       <div className="h-16 px-5 flex items-center border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand text-white flex items-center justify-center font-heading font-bold text-sm">
-            GM
-          </div>
-          <div>
-            <div className="font-heading font-semibold text-slate-900 leading-none text-lg">{t("brand.name")}</div>
+          <img src={LOGO} alt="Gastromek" className="h-9 w-auto object-contain" />
+          <div className="border-l border-slate-200 pl-2">
+            <div className="font-heading font-semibold text-slate-900 leading-none text-base">CRM</div>
             <div className="text-[10px] text-slate-500 mt-1 tracking-wider uppercase">{t("brand.tagline")}</div>
           </div>
         </div>
