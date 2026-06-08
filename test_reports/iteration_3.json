@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only re-verification of language bug + new Dashboard/Customers redesign for Gastromek CRM. (1) LANGUAGE BUG NOT REPRODUCIBLE: with cleared localStorage, /login renders GERMAN by default ('Willkommen', 'Anmelden', switcher='Deutsch') and after a German login the panel/sidebar STAYS German (Dashboard/Kunden/Angebote/Produkte, 'Angebots-Pipeline'); zero Turkish leak; localStorage key 'gastromek_lang' set to 'de' after switching. (2) Switching to Turkish from sidebar updates the whole panel (Kontrol Paneli/Müşteriler/Teklifler/Ürünler, 'Teklif Hattı'), persists across navigation + page reload, and switching back to German is also clean. (3) New Dashboard blueprint grid renders correctly: 3 nav stat blocks (data-testid dashboard-stat-0/1/2 with counts 3/4187/4), recent-quotes panel + pipeline panel with all 5 statuses (taslak/gonderildi/kabul/red/suresi_doldu) + 'Neues Angebot' navigates to /teklifler/yeni. (4) New Customers ledger renders with avatar initials + company names; search/date filters/clear/pagination testids all present. (5) Customer Sheet form CRUD works end-to-end: 'Neuer Kunde' opens right-side Sheet (data-testid='customer-sheet'), CREATE 'QA Test GmbH' -> appears in list; EDIT -> renamed to 'QA Test GmbH (Edited)' persists; DELETE -> removed and not visible. (6) No raw translation keys anywhere (regex scan returned 0 leaks in both languages). Only harmless console noise = 2x pre-login /api/auth/me 401 (pre-existing, already documented in iteration_2).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard - first stat block", "issues": ["Label is 'Kunde' (singular) in German while the count is 3; expected plural 'Kunden' to match the sidebar nav item and read more naturally. Translation key dashboard.customer in de should likely be 'Kunden'. Minor i18n cosmetic only."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_3.json", "/app/test_reports/iteration_2.json"],
+  "action_items": [
+    "Optional polish: change dashboard.customer (de) label from 'Kunde' to 'Kunden' for consistency with sidebar 'Kunden'.",
+    "Optional polish (carried from iteration_2): suppress the pre-login /api/auth/me 401 console errors on the public /login route for a cleaner DX."
+  ],
+  "critical_code_review_comments": [
+    "LanguageProvider is correctly mounted at the app root (single global) so login and panel always share the same `lang` state — this is why the originally reported 'panel comes up in Turkish after German login' is NOT reproducible: there is no separate login-language scope to drift from panel-language.",
+    "Customers.jsx Sheet form uses controlled inputs + a single save() handler that PUTs when editing and POSTs when creating — clean. window.confirm() is used for delete (works but a shadcn AlertDialog would be more on-brand with the new design).",
+    "Dashboard.jsx STATUS_ORDER + STATUS_MAP wiring is solid and each pipeline row has a unique data-testid; counts/percentages fall back to 0 when stats is null (safe).",
+    "Customers.jsx: `const { t } = useT()` is shadowed inside the debounced useEffect by `const t = setTimeout(...)`. It works because the inner `t` is only used as the timer handle, but the shadowing is confusing and risks future regressions if someone reaches for the translator inside that block. Suggest renaming the timer to `timer`.",
+    "Pre-login probe to /api/auth/me producing console errors is harmless but ugly in DevTools."
+  ],
+  "updated_files": [],
+  "success_rate": {"frontend": "100% (login DE default, login->panel stays DE, TR switch full panel, persistence across reload, switch back DE, dashboard testids+counts, customers ledger+filters, customer Sheet CREATE/EDIT/DELETE, new-quote nav, zero raw key leaks)"},
+  "test_credentials": "admin@arigastro.com / admin123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Created and then DELETED test customer 'QA Test GmbH' / 'QA Test GmbH (Edited)' (id 6a47b88f-8aa4-4070-a407-8d0122ade998). DB state restored.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The originally reported 'panel becomes Turkish after a German login' bug could NOT be reproduced in the preview env (cleared localStorage, German default, German login → German panel). LanguageProvider is a single global; do not split it. Default lang key: localStorage 'gastromek_lang' = 'de'. Customer Sheet testids: customer-sheet / new-customer-btn / customer-company-name / customer-tax-number / save-customer-btn / edit-customer-<id> / delete-customer-<id> (deletion uses native window.confirm — accept the page.on('dialog') in Playwright). Dashboard testids: dashboard, dashboard-stat-0/1/2, dashboard-recent-panel, dashboard-pipeline-panel, pipeline-taslak/gonderildi/kabul/red/suresi_doldu, dashboard-new-quote-btn. Currency on quotes is still ₺ (TRY) regardless of UI language — that is data, not i18n.",
+  "rca of the issue": "Original bug report ('German login → Turkish panel') is not reproducible against the current build. Root cause: not a code bug in this iteration — LanguageContext lives at the root and there is no per-route language state. Most likely the user originally had localStorage gastromek_lang='tr' from a prior session while the login UI element they were looking at was an untranslated/hardcoded German string. With the current code + a clean localStorage, default = de end-to-end and explicit switching persists correctly. No mitigation required beyond what is already in place."
+}

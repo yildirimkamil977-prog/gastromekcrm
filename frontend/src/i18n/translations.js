@@ -76,6 +76,8 @@ export const translations = {
       recentQuotes: "Letzte Angebote",
       viewAll: "Alle anzeigen",
       noQuotes: "Noch keine Angebote.",
+      pipeline: "Angebots-Pipeline",
+      total: "Gesamt",
     },
     customers: {
       title: "Kunden",
@@ -398,6 +400,8 @@ export const translations = {
       recentQuotes: "Son Teklifler",
       viewAll: "Tümünü gör",
       noQuotes: "Henüz teklif yok.",
+      pipeline: "Teklif Hattı",
+      total: "Toplam",
     },
     customers: {
       title: "Müşteriler",
