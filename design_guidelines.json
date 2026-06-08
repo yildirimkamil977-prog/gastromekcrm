@@ -1,148 +1,115 @@
 {
-  "project_name": "ArıCRM",
-  "domain": "B2B CRM for Industrial Kitchen Equipment",
-  "language": "Turkish",
-  "theme": "Light",
-  "archetype": "4 (Swiss & High-Contrast) - Authority, Clarity, Truth",
-  "design_philosophy": "Professional, trustworthy B2B aesthetic. Clean tables, generous spacing, clear hierarchy. Lightweight and modern but heavily corporate to suit daily-use by sales reps.",
+  "project_name": "Gastromek CRM Redesign",
+  "theme": "light",
+  "archetype": "Swiss & High-Contrast (Functional / Industrial)",
+  "design_philosophy": "Cardless, structural, high-density 'Control Room' layout. Moving away from generic floating white cards to a unified grid system with 1px sharp borders. Brand green is used strategically as an energetic focal point, keeping the rest of the UI monochrome and objective.",
   "colors": {
-    "primary": {
-      "DEFAULT": "#0073c4",
-      "hover": "#005ba1",
-      "light": "#e6f1f9",
-      "dark": "#004d85"
+    "brand": {
+      "DEFAULT": "#70c800",
+      "hover": "#5ba800",
+      "light": "#eef8df",
+      "dark": "#4e8a00"
     },
     "background": {
-      "app": "#f8fafc",
-      "surface": "#ffffff",
-      "overlay": "rgba(15, 23, 42, 0.4)"
+      "main": "#FAFAFA",
+      "surface": "#FFFFFF"
     },
     "text": {
-      "primary": "#0f172a",
-      "secondary": "#475569",
-      "muted": "#94a3b8",
-      "inverse": "#ffffff"
-    },
-    "border": {
-      "DEFAULT": "#e2e8f0",
-      "focus": "#0073c4"
+      "primary": "#09090B",
+      "secondary": "#71717A",
+      "muted": "#A1A1AA"
     },
     "status": {
-      "taslak": { "bg": "#f1f5f9", "text": "#475569", "border": "#cbd5e1", "label": "Taslak" },
-      "gonderildi": { "bg": "#eff6ff", "text": "#1d4ed8", "border": "#bfdbfe", "label": "Gönderildi" },
-      "kabul": { "bg": "#ecfdf5", "text": "#047857", "border": "#a7f3d0", "label": "Kabul" },
-      "red": { "bg": "#fef2f2", "text": "#b91c1c", "border": "#fecaca", "label": "Red" },
-      "suresi_doldu": { "bg": "#fffbeb", "text": "#b45309", "border": "#fde68a", "label": "Süresi Doldu" }
+      "draft": {
+        "bg": "#F1F5F9",
+        "text": "#475569",
+        "border": "#CBD5E1",
+        "bar": "#94A3B8"
+      },
+      "sent": {
+        "bg": "#EFF6FF",
+        "text": "#1D4ED8",
+        "border": "#BFDBFE",
+        "bar": "#60A5FA"
+      },
+      "accepted": {
+        "bg": "#eef8df",
+        "text": "#4e8a00",
+        "border": "#70c800",
+        "bar": "#70c800",
+        "note": "Aligned with brand green but tinted for badge/background usage to differentiate from solid primary CTA buttons."
+      },
+      "rejected": {
+        "bg": "#FEF2F2",
+        "text": "#B91C1C",
+        "border": "#FECACA",
+        "bar": "#F87171"
+      },
+      "expired": {
+        "bg": "#FFFBEB",
+        "text": "#B45309",
+        "border": "#FDE68A",
+        "bar": "#FBBF24"
+      }
     }
   },
   "typography": {
-    "font_family": {
-      "heading": "'Outfit', sans-serif",
-      "body": "'Manrope', sans-serif",
-      "mono": "'JetBrains Mono', monospace"
+    "headings": {
+      "family": "Outfit",
+      "weights": [
+        "600",
+        "700"
+      ],
+      "usage": "H1/H2 should use tracking-tight (-0.02em). Use for page titles and large metric numbers."
     },
-    "scales": {
-      "h1": "text-3xl md:text-4xl font-semibold tracking-tight text-slate-900",
-      "h2": "text-2xl md:text-3xl font-semibold tracking-tight text-slate-900",
-      "h3": "text-xl md:text-2xl font-medium tracking-tight text-slate-800",
-      "h4": "text-lg md:text-xl font-medium text-slate-800",
-      "body": "text-sm md:text-base text-slate-600 leading-relaxed",
-      "small": "text-xs md:text-sm text-slate-500",
-      "overline": "text-xs font-bold uppercase tracking-[0.1em] text-slate-500"
+    "body": {
+      "family": "Manrope",
+      "weights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "usage": "Use for all data tables, labels, form inputs, and paragraph text. Ensures high legibility for dense data."
     }
   },
-  "spacing_and_layout": {
-    "global_padding": "p-4 md:p-6 lg:p-8",
-    "grid_system": {
-      "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6",
-      "form": "grid grid-cols-1 md:grid-cols-2 gap-6",
-      "bento": "grid grid-cols-1 md:grid-cols-3 gap-6"
-    },
-    "radius": {
-      "card": "rounded-xl",
-      "button": "rounded-lg",
-      "input": "rounded-lg",
-      "badge": "rounded-full"
-    },
-    "shadows": {
-      "card": "shadow-sm",
-      "dropdown": "shadow-lg shadow-slate-200/50",
-      "modal": "shadow-xl shadow-slate-900/10"
-    }
-  },
-  "ui_components": {
-    "sidebar": {
-      "style": "Fixed on the left, white background (surface), thin right border (border-slate-200).",
-      "links": "Padding y-2 x-3, rounded-lg. Active state gets bg-blue-50 and text-[#0073c4] with font-medium. Inactive state is text-slate-600 hover:bg-slate-50 hover:text-slate-900."
-    },
-    "header": {
-      "style": "Sticky top, h-16, white background, border-b border-slate-200, flex items-center justify-between px-6.",
-      "elements": "Breadcrumbs on left, User profile dropdown on right."
-    },
-    "cards": {
-      "style": "bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden.",
-      "header": "px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50",
-      "body": "p-6"
-    },
-    "tables": {
-      "style": "Shadcn UI table style. w-full text-sm text-left.",
-      "header": "bg-slate-50 text-slate-500 font-medium uppercase text-xs tracking-wider",
-      "rows": "border-b border-slate-100 hover:bg-slate-50/80 transition-colors",
-      "pagination": "flex items-center justify-between px-4 py-3 border-t border-slate-200"
-    },
-    "buttons": {
-      "primary": "bg-[#0073c4] hover:bg-[#005ba1] text-white font-medium shadow-sm transition-all rounded-lg px-4 py-2",
-      "secondary": "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium shadow-sm transition-all rounded-lg px-4 py-2",
-      "destructive": "bg-red-600 hover:bg-red-700 text-white font-medium shadow-sm transition-all rounded-lg px-4 py-2",
-      "ghost": "hover:bg-slate-100 text-slate-700 font-medium transition-all rounded-lg px-4 py-2"
-    },
-    "forms": {
-      "inputs": "bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-[#0073c4] focus:border-[#0073c4] block w-full p-2.5",
-      "labels": "block mb-1 text-sm font-medium text-slate-700"
-    },
-    "badges": {
-      "style": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
-    }
-  },
-  "feature_specific_patterns": {
-    "login_page": {
-      "layout": "Split screen or centered card. If split, left side is a sleek brand section with the industrial_kitchen_bg image and a dark #0073c4 tint overlay. Right side is a minimal white login form.",
-      "logo": "Use the provided Arıgastro logo prominently."
-    },
+  "layout_strategy": {
+    "global": "Avoid standard drop shadows (shadow-md). Use border-zinc-200 and solid white backgrounds for surfaces against a very light gray (#FAFAFA) app background. All layout elements should feel locked-in and purposeful.",
     "dashboard": {
-      "metrics": "Status-based count widgets ONLY (Taslak, Gönderildi, Kabul, Red, Süresi doldu). NO REVENUE METRICS.",
-      "lists": "Recent Quotes table widget."
+      "concept": "The Blueprint Grid",
+      "structure": "A master CSS grid where sections are separated by borders rather than gaps, creating a cohesive command center look.",
+      "top_row": "3 Nav Stat blocks (Kunden, Produkte, Angebote). Left-aligned text, large numeric values in Outfit. Bottom border has a 2px hover effect that reveals the brand green (#70c800).",
+      "main_split": "Grid with 12 columns. Col 1-8: 'Letzte Angebote' (Recent Quotes) Table panel. Col 9-12: 'Pipeline Health' (the 5 statuses).",
+      "pipeline_health": "A dense vertical stack inside a single panel. Each status row shows Name, Count, and a custom mini progress bar using the dedicated status colors. Do NOT make them 5 separate floating cards."
     },
-    "quote_preparation_form": {
-      "layout": "Two-column grid for customer details. Full-width dynamic table for products.",
-      "product_search": "Autocomplete search bar. Selected products appear as rows in the table.",
-      "inline_editing": "Product rows must have a small Phosphor pencil icon (<PencilSimple />) next to editable fields (Quantity, Unit Price, Discount %)",
-      "totals_section": "Sticky bottom or fixed bottom-right panel displaying Subtotal, VAT (KDV), Discount total, and Grand Total. Currency selector (TRY/EUR/USD)."
-    },
-    "pdf_template": {
-      "layout": "A4 proportion container, fully white background, highly structured and formal. Do not use UI-style rounded corners or heavy shadows here. Straight lines and classic typography.",
-      "header": "Logo on left, 'TEKLİF' (Quotation) title and details (Quote #, Date, Validity) on right.",
-      "body": "Clean bordered table. Columns: Image (optional), Product Code, Description, Qty, Unit Price, Total. Stripe every alternate row with very light gray (#f8fafc).",
-      "footer": "Company Info (Arıgastro), Bank Details, Contact, Signature line."
+    "customers": {
+      "concept": "The Seamless Ledger",
+      "header": "Integrated search and date filters immediately below the page title, sitting flush with the table. The 'Neuer Kunde' CTA is prominent in brand green.",
+      "table": "Cardless table. The table header is sticky, bg-white, border-y border-zinc-200. Rows have hover:bg-zinc-50. No vertical borders, only subtle horizontal dividers. Action icons only appear on row hover.",
+      "creation_flow": "Use shadcn 'Sheet' (Slide-out from right) for the 'Neuer Kunde' form instead of a centered modal. It provides much better vertical scrolling space for the 10 fields and feels premium/enterprise."
     }
   },
-  "media_assets": {
-    "logo_url": "https://customer-assets.emergentagent.com/job_quote-crm-1/artifacts/6y5mv5wn_image.png",
-    "login_background": "https://images.pexels.com/photos/33210357/pexels-photo-33210357.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    "empty_state_image": "https://images.unsplash.com/photo-1602533438197-c9c47ae4b258?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwzfHxpbmR1c3RyaWFsJTIwa2l0Y2hlbiUyMGVxdWlwbWVudCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3NzY3NzkxMzZ8MA&ixlib=rb-4.1.0&q=85"
+  "components": {
+    "button": {
+      "primary": "bg-[#70c800] hover:bg-[#5ba800] text-white shadow-sm transition-colors",
+      "outline": "border border-zinc-200 hover:bg-zinc-100 text-zinc-900",
+      "ghost": "hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900"
+    },
+    "badge": {
+      "style": "rounded-md px-2 py-0.5 text-xs font-semibold border uppercase tracking-wider"
+    },
+    "table": {
+      "header": "text-xs uppercase tracking-wider text-zinc-500 font-manrope font-semibold bg-zinc-50/50 px-4 py-3",
+      "cell": "text-sm text-zinc-900 font-manrope px-4 py-3"
+    },
+    "sheet": {
+      "overlay": "bg-zinc-950/20 backdrop-blur-sm",
+      "content": "border-l border-zinc-200 bg-white"
+    }
   },
-  "icons": {
-    "library": "@phosphor-icons/react",
-    "usage": "Use thin or regular weights. Do not use duotone unless for empty state illustrations."
-  },
-  "instructions_to_main_agent": [
-    "Install `@phosphor-icons/react` for iconography.",
-    "Add 'Outfit' and 'Manrope' fonts from Google Fonts in your index.html or global css.",
-    "The primary corporate color is #0073c4. Configure it in tailwind.config.js as `primary`.",
-    "The application language MUST BE Turkish (TR). E.g., Dashboard -> 'Kontrol Paneli', Customers -> 'Müşteriler', Quotes -> 'Teklifler', Products -> 'Ürünler', Settings -> 'Ayarlar', Users -> 'Kullanıcılar'.",
-    "Build the dashboard metrics specifically for the counts of the 5 statuses (Taslak, Gönderildi, Kabul, Red, Süresi doldu). Omit any financial/revenue data.",
-    "The 'Quote Form' is critical. Use standard Shadcn Form primitives but ensure the product line items feel deeply integrated. Provide visual cues (pencil icon) for editable cells.",
-    "Implement the professional PDF template as a distinct view or printable component, completely stripped of web-UI elements like navigation and action buttons.",
-    "Always apply data-testid attributes to interactive elements, e.g., data-testid='login-submit-button', data-testid='create-quote-button'."
-  ]
+  "development_rules": {
+    "internationalization": "CRITICAL: All visible text MUST be wrapped in the translation function, e.g., {t('dashboard.title')}. Provide descriptive object keys. Never hardcode German or Turkish strings directly in the JSX.",
+    "testing": "All interactive elements, forms, and major panels MUST have a data-testid attribute (e.g., data-testid='new-customer-btn', data-testid='dashboard-pipeline-panel', data-testid='filter-search-input').",
+    "icons": "Use lucide-react exclusively. Set strokeWidth={1.5} for a cleaner, more precise industrial look.",
+    "responsiveness": "Ensure the dashboard 12-col grid collapses to a 1-col stack on mobile, placing Pipeline Health below the Recent Quotes table."
+  }
 }
