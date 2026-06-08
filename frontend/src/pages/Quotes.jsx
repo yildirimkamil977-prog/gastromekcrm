@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, formatApiError, formatDate, formatMoney } from "../lib/api";
+import { useT } from "../i18n/LanguageContext";
 import PageHeader from "../components/PageHeader";
-import StatusBadge, { STATUS_MAP } from "../components/StatusBadge";
+import StatusBadge, { STATUS_KEYS } from "../components/StatusBadge";
 import Pagination from "../components/Pagination";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -12,10 +13,10 @@ import {
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
-const STATUS_OPTIONS = ["", ...Object.keys(STATUS_MAP)];
 const PAGE_SIZE = 20;
 
 export default function Quotes() {
+  const { t } = useT();
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [users, setUsers] = useState([]);
@@ -56,10 +57,10 @@ export default function Quotes() {
 
   return (
     <div>
-      <PageHeader title="Teklifler" subtitle="Hazırladığınız tüm teklifler">
+      <PageHeader title={t("quotes.title")} subtitle={t("quotes.subtitle")}>
         <Link to="/teklifler/yeni">
           <Button className="bg-brand hover:bg-brand-hover" data-testid="new-quote-btn">
-            <Plus size={16} className="mr-2" /> Yeni Teklif
+            <Plus size={16} className="mr-2" /> {t("dashboard.newQuote")}
           </Button>
         </Link>
       </PageHeader>
@@ -69,25 +70,25 @@ export default function Quotes() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             className="pl-9"
-            placeholder="Teklif no, müşteri adı, vergi no…"
+            placeholder={t("quotes.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="quote-search-input"
           />
         </div>
         <Select value={status || "all"} onValueChange={(v) => setStatus(v === "all" ? "" : v)}>
-          <SelectTrigger data-testid="quote-status-filter"><SelectValue placeholder="Tüm durumlar" /></SelectTrigger>
+          <SelectTrigger data-testid="quote-status-filter"><SelectValue placeholder={t("quotes.allStatuses")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tüm durumlar</SelectItem>
-            {STATUS_OPTIONS.filter(Boolean).map((s) => (
-              <SelectItem key={s} value={s}>{STATUS_MAP[s].label}</SelectItem>
+            <SelectItem value="all">{t("quotes.allStatuses")}</SelectItem>
+            {STATUS_KEYS.map((s) => (
+              <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={createdBy || "all"} onValueChange={(v) => setCreatedBy(v === "all" ? "" : v)}>
-          <SelectTrigger data-testid="quote-creator-filter"><SelectValue placeholder="Hazırlayan" /></SelectTrigger>
+          <SelectTrigger data-testid="quote-creator-filter"><SelectValue placeholder={t("quotes.preparedBy")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tüm kullanıcılar</SelectItem>
+            <SelectItem value="all">{t("quotes.allUsers")}</SelectItem>
             {users.map((u) => (
               <SelectItem key={u.id} value={u.id} data-testid={`quote-creator-option-${u.id}`}>
                 {u.name}
@@ -95,8 +96,8 @@ export default function Quotes() {
             ))}
           </SelectContent>
         </Select>
-        <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} placeholder="Başlangıç" />
-        <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} placeholder="Bitiş" />
+        <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -104,18 +105,18 @@ export default function Quotes() {
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-slate-500 font-medium uppercase text-xs tracking-wider">
               <tr>
-                <th className="px-6 py-3">Teklif No</th>
-                <th className="px-6 py-3">Müşteri</th>
-                <th className="px-6 py-3">Hazırlayan</th>
-                <th className="px-6 py-3">Tarih</th>
-                <th className="px-6 py-3">Geçerlilik</th>
-                <th className="px-6 py-3">Tutar</th>
-                <th className="px-6 py-3">Durum</th>
+                <th className="px-6 py-3">{t("table.quoteNo")}</th>
+                <th className="px-6 py-3">{t("table.customer")}</th>
+                <th className="px-6 py-3">{t("table.preparedBy")}</th>
+                <th className="px-6 py-3">{t("table.date")}</th>
+                <th className="px-6 py-3">{t("table.validity")}</th>
+                <th className="px-6 py-3">{t("table.amount")}</th>
+                <th className="px-6 py-3">{t("table.status")}</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="p-8 text-center text-slate-400">Yükleniyor…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-slate-400">Teklif bulunamadı.</td></tr>}
+              {loading && <tr><td colSpan={7} className="p-8 text-center text-slate-400">{t("common.loading")}</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-slate-400">{t("quotes.notFound")}</td></tr>}
               {rows.map((q) => (
                 <tr key={q.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
                   <td className="px-6 py-3 font-mono text-xs">

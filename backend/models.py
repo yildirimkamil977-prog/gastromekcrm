@@ -1,4 +1,4 @@
-"""Pydantic models for ArıCRM"""
+"""Pydantic models for Gastromek CRM"""
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -141,8 +141,8 @@ class BankAccount(BaseModel):
 
 
 class CompanySettings(BaseModel):
-    company_name: str = "Arıgastro"
-    tagline: str = "Endüstriyel Mutfak Ekipmanları"
+    company_name: str = "Gastromek"
+    tagline: str = "Industrielle Küchenausstattung"
     logo_url: str = ""
     website: str = ""
     phone: str = ""

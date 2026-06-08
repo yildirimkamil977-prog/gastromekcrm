@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, formatApiError, formatDate, formatMoney } from "../lib/api";
+import { useT } from "../i18n/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -7,6 +8,7 @@ import { RefreshCw, Search, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Products() {
+  const { t } = useT();
   const [rows, setRows] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -40,8 +42,8 @@ export default function Products() {
     setSyncing(true);
     try {
       const r = await api.post("/products/sync");
-      if (r.data.success) toast.success(`${r.data.count} ürün senkronize edildi`);
-      else toast.error(r.data.error || "Senkronizasyon başarısız");
+      if (r.data.success) toast.success(t("products.syncSuccess", { count: r.data.count }));
+      else toast.error(r.data.error || t("products.syncFailed"));
       load();
     } catch (e) {
       toast.error(formatApiError(e));
@@ -53,12 +55,12 @@ export default function Products() {
   return (
     <div>
       <PageHeader
-        title="Ürünler"
-        subtitle={meta ? `${meta.count} ürün · Son güncelleme: ${meta.last_sync ? formatDate(meta.last_sync.at) : "-"}` : "Feed'den çekilen ürünler"}
+        title={t("products.title")}
+        subtitle={meta ? `${meta.count} ${t("products.unit")} · ${t("products.lastUpdate")}: ${meta.last_sync ? formatDate(meta.last_sync.at) : "-"}` : t("products.subtitleFeed")}
       >
         <Button onClick={sync} disabled={syncing} className="bg-brand hover:bg-brand-hover" data-testid="sync-products-btn">
           <RefreshCw size={16} className={`mr-2 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Güncelleniyor…" : "Feed'i Güncelle"}
+          {syncing ? t("products.updating") : t("products.updateFeed")}
         </Button>
       </PageHeader>
 
@@ -67,7 +69,7 @@ export default function Products() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             className="pl-9"
-            placeholder="Ürün adı, kodu veya marka ile ara…"
+            placeholder={t("products.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="product-search-input"
@@ -76,9 +78,9 @@ export default function Products() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-slate-400">Yükleniyor…</div>
+        <div className="p-8 text-slate-400">{t("common.loading")}</div>
       ) : rows.length === 0 ? (
-        <div className="p-8 text-slate-400 bg-white border border-slate-200 rounded-xl">Ürün bulunamadı.</div>
+        <div className="p-8 text-slate-400 bg-white border border-slate-200 rounded-xl">{t("products.notFound")}</div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {rows.map((p) => (

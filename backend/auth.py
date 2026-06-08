@@ -1,4 +1,4 @@
-"""Auth utilities for ArıCRM"""
+"""Auth utilities for Gastromek CRM"""
 import os
 import bcrypt
 import jwt

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, formatApiError, formatDate } from "../lib/api";
+import { useT } from "../i18n/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import Pagination from "../components/Pagination";
 import { Button } from "../components/ui/button";
@@ -19,6 +20,7 @@ const EMPTY = {
 const PAGE_SIZE = 20;
 
 export default function Customers() {
+  const { t } = useT();
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -55,21 +57,21 @@ export default function Customers() {
 
   const remove = async (id, hasQuotes) => {
     const hint = hasQuotes
-      ? "Bu müşterinin kayıtlı teklifleri var. TÜM teklifleri ile birlikte silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-      : "Bu müşteriyi silmek istediğinize emin misiniz?";
+      ? t("customers.confirmDeleteWithQuotes")
+      : t("customers.confirmDelete");
     if (!window.confirm(hint)) return;
     try {
       try {
         await api.delete(`/customers/${id}`);
       } catch (e) {
         if (e?.response?.status === 409) {
-          if (!window.confirm(formatApiError(e) + " Yine de teklifleri ile birlikte silinsin mi?")) return;
+          if (!window.confirm(formatApiError(e) + t("customers.forceDeleteSuffix"))) return;
           await api.delete(`/customers/${id}`, { params: { force: true } });
         } else {
           throw e;
         }
       }
-      toast.success("Müşteri silindi");
+      toast.success(t("customers.deleted"));
       load(page);
     } catch (e) {
       toast.error(formatApiError(e));
@@ -84,10 +86,10 @@ export default function Customers() {
     try {
       if (editing) {
         await api.put(`/customers/${editing.id}`, form);
-        toast.success("Müşteri güncellendi");
+        toast.success(t("customers.updated"));
       } else {
         await api.post("/customers", form);
-        toast.success("Müşteri eklendi");
+        toast.success(t("customers.added"));
       }
       setOpen(false);
       load();
@@ -96,41 +98,39 @@ export default function Customers() {
     }
   };
 
-  const remove_old_disabled = null; // cleaned up, using enhanced remove above
-
   return (
     <div>
-      <PageHeader title="Müşteriler" subtitle="Müşterilerinizi yönetin, arayın ve filtreleyin">
+      <PageHeader title={t("customers.title")} subtitle={t("customers.subtitle")}>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-brand hover:bg-brand-hover" onClick={openNew} data-testid="new-customer-btn">
-              <Plus size={16} className="mr-2" /> Yeni Müşteri
+              <Plus size={16} className="mr-2" /> {t("customers.newCustomer")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="font-heading">
-                {editing ? "Müşteri Düzenle" : "Yeni Müşteri"}
+                {editing ? t("customers.editCustomer") : t("customers.newCustomer")}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <Label>İşletme / Firma Adı *</Label>
+                <Label>{t("customers.companyName")} *</Label>
                 <Input required value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} data-testid="customer-company-name" />
               </div>
-              <div><Label>Vergi No / TC</Label><Input value={form.tax_number} onChange={(e) => setForm({ ...form, tax_number: e.target.value })} data-testid="customer-tax-number" /></div>
-              <div><Label>Vergi Dairesi</Label><Input value={form.tax_office} onChange={(e) => setForm({ ...form, tax_office: e.target.value })} /></div>
-              <div><Label>Yetkili Kişi</Label><Input value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} /></div>
-              <div><Label>Telefon</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-              <div><Label>WhatsApp (ülke kodu ile)</Label><Input placeholder="+905xxxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></div>
-              <div><Label>E-posta</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-              <div><Label>Şehir</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-              <div className="md:col-span-2"><Label>Adres</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-              <div className="md:col-span-2"><Label>Notlar</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+              <div><Label>{t("customers.taxNumber")}</Label><Input value={form.tax_number} onChange={(e) => setForm({ ...form, tax_number: e.target.value })} data-testid="customer-tax-number" /></div>
+              <div><Label>{t("customers.taxOffice")}</Label><Input value={form.tax_office} onChange={(e) => setForm({ ...form, tax_office: e.target.value })} /></div>
+              <div><Label>{t("customers.contactPerson")}</Label><Input value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} /></div>
+              <div><Label>{t("customers.phone")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>{t("customers.whatsapp")}</Label><Input placeholder="+905xxxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></div>
+              <div><Label>{t("customers.email")}</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+              <div><Label>{t("customers.city")}</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div className="md:col-span-2"><Label>{t("customers.address")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+              <div className="md:col-span-2"><Label>{t("customers.notes")}</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
               <DialogFooter className="md:col-span-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>İptal</Button>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
                 <Button type="submit" className="bg-brand hover:bg-brand-hover" data-testid="save-customer-btn">
-                  {editing ? "Güncelle" : "Kaydet"}
+                  {editing ? t("common.update") : t("common.save")}
                 </Button>
               </DialogFooter>
             </form>
@@ -143,7 +143,7 @@ export default function Customers() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             className="pl-9"
-            placeholder="Firma, vergi no, isim, telefon veya e-posta ile ara…"
+            placeholder={t("customers.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="customer-search-input"
@@ -158,19 +158,19 @@ export default function Customers() {
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-slate-500 font-medium uppercase text-xs tracking-wider">
               <tr>
-                <th className="px-6 py-3">Firma</th>
-                <th className="px-6 py-3">Vergi No</th>
-                <th className="px-6 py-3">Yetkili</th>
-                <th className="px-6 py-3">Telefon</th>
-                <th className="px-6 py-3">Şehir</th>
-                <th className="px-6 py-3">Kayıt</th>
-                <th className="px-6 py-3 text-right">İşlem</th>
+                <th className="px-6 py-3">{t("customers.thCompany")}</th>
+                <th className="px-6 py-3">{t("customers.thTaxNo")}</th>
+                <th className="px-6 py-3">{t("customers.thContact")}</th>
+                <th className="px-6 py-3">{t("customers.thPhone")}</th>
+                <th className="px-6 py-3">{t("customers.thCity")}</th>
+                <th className="px-6 py-3">{t("table.registered")}</th>
+                <th className="px-6 py-3 text-right">{t("table.actions")}</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="p-8 text-center text-slate-400">Yükleniyor…</td></tr>}
+              {loading && <tr><td colSpan={7} className="p-8 text-center text-slate-400">{t("common.loading")}</td></tr>}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-slate-400">Müşteri bulunamadı.</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-slate-400">{t("customers.notFound")}</td></tr>
               )}
               {rows.map((c) => (
                 <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">

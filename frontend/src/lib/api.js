@@ -9,6 +9,12 @@ export const api = axios.create({
 
 export const API_URL = `${BASE}/api`;
 
+// Active locale for number/date formatting, updated by the language context.
+let currentLocale = "de-DE";
+export function setLocale(locale) {
+  currentLocale = locale || "de-DE";
+}
+
 export function formatApiError(err) {
   const d = err?.response?.data?.detail;
   if (!d) return err?.message || "Bir hata oluştu";
@@ -25,7 +31,7 @@ export function formatApiError(err) {
 export function formatMoney(value, currency = "TRY") {
   const symbols = { TRY: "₺", USD: "$", EUR: "€" };
   const n = Number(value || 0);
-  return `${symbols[currency] || ""}${n.toLocaleString("tr-TR", {
+  return `${symbols[currency] || ""}${n.toLocaleString(currentLocale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -35,7 +41,7 @@ export function formatDate(iso) {
   if (!iso) return "-";
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("tr-TR", {
+    return d.toLocaleDateString(currentLocale, {
       day: "2-digit", month: "2-digit", year: "numeric",
     });
   } catch {

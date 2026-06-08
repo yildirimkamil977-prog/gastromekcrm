@@ -3,9 +3,11 @@ import Sidebar from "./Sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Menu } from "lucide-react";
 import { Toaster } from "sonner";
+import { useT } from "../i18n/LanguageContext";
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
+  const { t } = useT();
 
   return (
     <div className="min-h-screen flex bg-slate-50">
@@ -20,7 +22,7 @@ export default function Layout({ children }) {
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <button
-                aria-label="Menüyü aç"
+                aria-label={t("nav.openMenu")}
                 data-testid="mobile-menu-btn"
                 className="p-2 rounded-lg hover:bg-slate-100 text-slate-700"
               >
@@ -34,9 +36,9 @@ export default function Layout({ children }) {
 
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center font-heading font-bold text-xs">
-              Arı
+              GM
             </div>
-            <span className="font-heading font-semibold text-slate-900">ArıCRM</span>
+            <span className="font-heading font-semibold text-slate-900">{t("brand.name")}</span>
           </div>
 
           <div className="w-9" />

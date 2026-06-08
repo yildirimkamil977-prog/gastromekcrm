@@ -1,4 +1,4 @@
-"""ArıCRM - FastAPI backend"""
+"""Gastromek CRM - FastAPI backend"""
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -35,14 +35,14 @@ mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url, maxPoolSize=50, retryWrites=True)
 db = client[os.environ["DB_NAME"]]
 
-app = FastAPI(title="ArıCRM API", version="1.0")
+app = FastAPI(title="Gastromek CRM API", version="1.0")
 
 api_router = APIRouter(prefix="/api")
 
 
 @api_router.get("/")
 async def root():
-    return {"service": "ArıCRM", "status": "ok"}
+    return {"service": "Gastromek CRM", "status": "ok"}
 
 
 @api_router.get("/health")
@@ -187,7 +187,7 @@ async def startup():
     # background tasks
     await start_daily_scheduler(db)
     asyncio.create_task(auto_expire_quotes_loop())
-    logger.info("ArıCRM API started")
+    logger.info("Gastromek CRM API started")
 
 
 @app.on_event("shutdown")

@@ -1,8 +1,10 @@
 import React from "react";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useT } from "../i18n/LanguageContext";
 
 export default function Pagination({ page, pageSize, total, onPageChange, compact = false }) {
+  const { t } = useT();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (total <= pageSize) return null;
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -45,7 +47,7 @@ export default function Pagination({ page, pageSize, total, onPageChange, compac
   return (
     <div className={`flex items-center justify-between flex-wrap gap-3 px-4 ${compact ? "py-2" : "py-3"} border-t border-slate-200 bg-white`} data-testid="pagination-bar">
       <div className="text-xs text-slate-500">
-        <span className="font-medium text-slate-700">{start}-{end}</span> / {total} kayıt
+        <span className="font-medium text-slate-700">{start}-{end}</span> / {total} {t("common.records")}
       </div>
       <div className="flex items-center gap-1">
         <Button

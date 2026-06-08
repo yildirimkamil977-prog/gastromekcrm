@@ -1,5 +1,6 @@
 import React from "react";
 import { formatDate, formatMoney, API_URL } from "../lib/api";
+import { useT } from "../i18n/LanguageContext";
 
 /**
  * Image with automatic proxy fallback.
@@ -27,8 +28,10 @@ function SafeImg({ src, style, alt = "" }) {
 /**
  * Printable / PDF quote template.
  * Keeps itself print-friendly; uses inline styles for html2canvas reliability.
+ * Text content is localized via the active language (German default / Turkish).
  */
 export default function QuotePDFTemplate({ quote, customer, company, signed = false }) {
+  const { t } = useT();
   const {
     quote_no, issue_date, valid_until, currency, items = [],
     subtotal = 0,
@@ -57,7 +60,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
             <SafeImg src={company.logo_url} alt="logo" style={{ maxHeight: 60, maxWidth: 240, objectFit: "contain" }} />
           ) : (
             <div style={{ fontSize: 22, fontFamily: "Outfit, sans-serif", fontWeight: 700, color: "#0073c4" }}>
-              {company?.company_name || "Arıgastro"}
+              {company?.company_name || t("brand.name")}
             </div>
           )}
           <div style={{ fontSize: 10, color: "#475569", marginTop: 6 }}>
@@ -65,20 +68,20 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
           </div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 8, lineHeight: 1.5 }}>
             {company?.address}
-            {company?.phone && <><br />Tel: {company.phone}</>}
-            {company?.email && <><br />E-posta: {company.email}</>}
+            {company?.phone && <><br />{t("pdf.tel")}{company.phone}</>}
+            {company?.email && <><br />{t("pdf.email")}{company.email}</>}
             {company?.website && <><br />{company.website}</>}
           </div>
         </div>
 
         <div style={{ textAlign: "right" }}>
           <div style={{ fontFamily: "Outfit, sans-serif", fontSize: 28, fontWeight: 700, color: "#0073c4", letterSpacing: 2 }}>
-            TEKLİF
+            {t("pdf.heading")}
           </div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>
-            <div><b>Teklif No:</b> {quote_no}</div>
-            <div><b>Tarih:</b> {formatDate(issue_date)}</div>
-            <div><b>Geçerlilik:</b> {formatDate(valid_until)}</div>
+            <div><b>{t("pdf.quoteNo")}</b> {quote_no}</div>
+            <div><b>{t("pdf.date")}</b> {formatDate(issue_date)}</div>
+            <div><b>{t("pdf.validity")}</b> {formatDate(valid_until)}</div>
           </div>
         </div>
       </div>
@@ -86,21 +89,21 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
       {/* Parties */}
       <div style={{ display: "flex", gap: 16, marginTop: 24 }}>
         <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 6, padding: 12 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8" }}>Sayın Müşteri</div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8" }}>{t("pdf.toCustomer")}</div>
           <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{customer?.company_name || "-"}</div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 4, lineHeight: 1.5 }}>
             {customer?.contact_person && <>{customer.contact_person}<br /></>}
             {customer?.address}
-            {customer?.tax_number && <><br />VN: {customer.tax_number} {customer.tax_office ? `/ ${customer.tax_office}` : ""}</>}
-            {customer?.phone && <><br />Tel: {customer.phone}</>}
+            {customer?.tax_number && <><br />{t("pdf.taxNoShort")}{customer.tax_number} {customer.tax_office ? `/ ${customer.tax_office}` : ""}</>}
+            {customer?.phone && <><br />{t("pdf.tel")}{customer.phone}</>}
             {customer?.email && <><br />{customer.email}</>}
           </div>
         </div>
         <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 6, padding: 12, background: "#f8fafc" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8" }}>Firma Bilgileri</div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8" }}>{t("pdf.companyInfo")}</div>
           <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{company?.company_name}</div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 4, lineHeight: 1.5 }}>
-            {company?.tax_number && <>VN: {company.tax_number} {company.tax_office ? `/ ${company.tax_office}` : ""}<br /></>}
+            {company?.tax_number && <>{t("pdf.taxNoShort")}{company.tax_number} {company.tax_office ? `/ ${company.tax_office}` : ""}<br /></>}
             {company?.phone}{company?.email && <> · {company.email}</>}
           </div>
         </div>
@@ -111,12 +114,12 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
         <thead>
           <tr style={{ background: "#0073c4", color: "#fff" }}>
             <th style={{ padding: "8px 6px", textAlign: "left", width: 40 }}>#</th>
-            <th style={{ padding: "8px 6px", textAlign: "left", width: 70 }}>Görsel</th>
-            <th style={{ padding: "8px 6px", textAlign: "left" }}>Ürün</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>Adet</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 90 }}>Birim Fiyat</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>İnd.%</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 100 }}>Tutar</th>
+            <th style={{ padding: "8px 6px", textAlign: "left", width: 70 }}>{t("pdf.thImage")}</th>
+            <th style={{ padding: "8px 6px", textAlign: "left" }}>{t("pdf.thProduct")}</th>
+            <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>{t("pdf.thQty")}</th>
+            <th style={{ padding: "8px 6px", textAlign: "right", width: 90 }}>{t("pdf.thUnitPrice")}</th>
+            <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>{t("pdf.thDisc")}</th>
+            <th style={{ padding: "8px 6px", textAlign: "right", width: 100 }}>{t("pdf.thAmount")}</th>
           </tr>
         </thead>
         <tbody>
@@ -151,19 +154,19 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
         <table style={{ fontSize: 11, minWidth: 280 }}>
           <tbody>
             <tr>
-              <td style={{ padding: "4px 10px", color: "#475569" }}>Ara Toplam</td>
+              <td style={{ padding: "4px 10px", color: "#475569" }}>{t("pdf.subtotal")}</td>
               <td style={{ padding: "4px 10px", textAlign: "right" }}>{formatMoney(subtotal, currency)}</td>
             </tr>
             {Number(discount_rate) > 0 && (
               <tr>
-                <td style={{ padding: "4px 10px", color: "#b91c1c" }}>İskonto (%{discount_rate})</td>
+                <td style={{ padding: "4px 10px", color: "#b91c1c" }}>{t("pdf.discount")} (%{discount_rate})</td>
                 <td style={{ padding: "4px 10px", textAlign: "right", color: "#b91c1c" }}>- {formatMoney(discount_amount, currency)}</td>
               </tr>
             )}
             <tr style={{ background: "#0073c4", color: "#fff" }}>
               <td style={{ padding: "10px", fontWeight: 700, lineHeight: 1.25 }}>
-                GENEL TOPLAM
-                <div style={{ fontSize: 8, fontWeight: 500, opacity: 0.9, letterSpacing: 1 }}>KDV DAHİL</div>
+                {t("pdf.grandTotal")}
+                <div style={{ fontSize: 8, fontWeight: 500, opacity: 0.9, letterSpacing: 1 }}>{t("pdf.vatIncluded")}</div>
               </td>
               <td style={{ padding: "10px", textAlign: "right", fontWeight: 700, fontSize: 13 }}>{formatMoney(grand_total, currency)}</td>
             </tr>
@@ -174,7 +177,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
       {/* Notes */}
       {notes && (
         <div style={{ marginTop: 24, padding: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8", marginBottom: 4 }}>Notlar</div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8", marginBottom: 4 }}>{t("pdf.notes")}</div>
           <div style={{ fontSize: 10, color: "#334155", whiteSpace: "pre-wrap" }}>{notes}</div>
         </div>
       )}
@@ -192,7 +195,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
             return (
               <div>
                 <div style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8", marginBottom: 4 }}>
-                  Banka Hesap Bilgileri
+                  {t("pdf.bankInfo")}
                 </div>
                 <table style={{ borderCollapse: "collapse", fontSize: 9 }}>
                   <tbody>
@@ -219,7 +222,7 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
           })()}
         </div>
         <div style={{ textAlign: "right" }}>
-          <div>Bu teklif {formatDate(valid_until)} tarihine kadar geçerlidir.</div>
+          <div>{t("pdf.validityFooter", { date: formatDate(valid_until) })}</div>
           {signed && (
             <div style={{ marginTop: 4 }}>
               <div
