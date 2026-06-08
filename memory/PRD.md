@@ -1,4 +1,16 @@
-# ArıCRM - Product Requirements Document
+# Gastromek CRM - Product Requirements Document
+
+> Rebranded from **ArıCRM** to **Gastromek CRM** (2026-06-08). Corporate color **#0073c4** + white.
+
+## Internationalization (i18n) — added 2026-06-08
+- Default language: **German (de)**. **Turkish (tr)** kept as an option.
+- Language switcher in the Sidebar (and Login top-right): `LanguageSwitcher.jsx` (data-testid `language-switcher-btn`, options `language-option-de` / `language-option-tr`).
+- Selection persisted in `localStorage['gastromek_lang']`; drives `document.documentElement.lang` and number/date locale (`de-DE` / `tr-TR`).
+- Core: `src/i18n/translations.js` (full de+tr dictionary) and `src/i18n/LanguageContext.jsx` (`useT()` hook, fallback: current lang → de → key).
+- **PDF is localized** too: `QuotePDFTemplate.jsx` uses `t('pdf.*')` (heading ANGEBOT/TEKLİF, table headers, totals, validity footer). PDF filename prefix Angebot-/Teklif-.
+- All pages/components converted to `useT()`. StatusBadge labels via `t('status.<code>')` while status codes (taslak/gonderildi/…) remain stored values.
+- Verified: testing agent iteration_2 — 100% frontend pass in both languages, no raw keys, no crashes.
+
 
 ## Original Problem Statement
 Turkish B2B CRM for **Arıgastro** (endüstriyel mutfak ekipmanları) focused on customer management + professional price quotation workflow. System name: **ArıCRM**. Corporate color: **#0073c4** + white.
