@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { api, formatApiError } from "../lib/api";
+import { api, formatApiError, formatDate, formatMoney } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
 import { PageBand, FullBleed } from "../components/Blueprint";
 import StatusBadge from "../components/StatusBadge";
@@ -320,29 +320,72 @@ export default function QuoteView() {
         <Button variant="ghost" onClick={remove} className="text-red-600 hover:text-red-700 hover:bg-red-50" data-testid="delete-quote-btn"><Trash2 size={14} strokeWidth={1.5} className="mr-2" /> {t("common.delete")}</Button>
       </div>
 
-      <div className="px-4 sm:px-6 lg:px-8 py-6">
-        {quote.revisions && quote.revisions.length > 1 && (
-          <div className="mb-4 bg-white border border-zinc-200 p-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">{t("quoteView.revisions")}</div>
-            <div className="flex flex-wrap gap-2">
-              {quote.revisions.map((r) => (
-                <Link key={r.id} to={`/teklifler/${r.id}`} className={`px-3 py-1 rounded-md text-xs font-medium border ${r.id === id ? "bg-brand text-white border-brand" : "bg-white text-zinc-700 border-zinc-200 hover:border-brand/40"}`}>
-                  {r.quote_no} <span className="opacity-60 ml-1">R{r.revision_number}</span>
-                </Link>
-              ))}
+      <div className="px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5 items-start">
+        <div className="min-w-0 order-2 xl:order-1">
+          {quote.revisions && quote.revisions.length > 1 && (
+            <div className="mb-4 bg-white border border-zinc-200 p-4">
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">{t("quoteView.revisions")}</div>
+              <div className="flex flex-wrap gap-2">
+                {quote.revisions.map((r) => (
+                  <Link key={r.id} to={`/teklifler/${r.id}`} className={`px-3 py-1 rounded-md text-xs font-medium border ${r.id === id ? "bg-brand text-white border-brand" : "bg-white text-zinc-700 border-zinc-200 hover:border-brand/40"}`}>
+                    {r.quote_no} <span className="opacity-60 ml-1">R{r.revision_number}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PDF preview */}
-        <div className="bg-white border border-zinc-200 overflow-hidden">
-          <div ref={pdfRef} className="flex justify-center p-2 sm:p-4 overflow-auto" style={{ background: "#e4e4e7" }}>
-            <div style={{ minWidth: "210mm" }}>
+          {/* PDF preview — paper on a desk */}
+          <div ref={pdfRef} className="overflow-auto p-3 sm:p-6 rounded-lg" style={{ background: "#27272a" }}>
+            <div className="mx-auto shadow-2xl" style={{ width: "210mm", minWidth: "210mm" }}>
               <QuotePDFTemplate quote={quote} customer={customer} company={company} signed={signed} />
             </div>
           </div>
         </div>
+
+        {/* Meta sidebar */}
+        <aside className="order-1 xl:order-2 xl:sticky xl:top-4 space-y-4" data-testid="quote-meta">
+          {customer && (
+            <div className="bg-white border border-zinc-200 p-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-2">{t("pdf.toCustomer")}</div>
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-lg bg-brand-light text-brand font-heading font-bold flex items-center justify-center text-base shrink-0">{(customer.company_name || "?").charAt(0).toUpperCase()}</span>
+                <div className="min-w-0">
+                  <Link to={`/musteriler/${customer.id}`} className="font-semibold text-zinc-900 hover:text-brand block truncate">{customer.company_name}</Link>
+                  {customer.phone && <div className="text-xs text-zinc-500 truncate">{customer.phone}</div>}
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="bg-white border border-zinc-200 p-5 space-y-2.5">
+            <MetaRow label={t("pdf.date")} value={formatDate(quote.issue_date)} />
+            <MetaRow label={t("quoteForm.validUntil")} value={formatDate(quote.valid_until)} />
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-zinc-500">{t("table.status")}</span>
+              <StatusBadge status={quote.status} />
+            </div>
+            <div className="pt-2.5 border-t border-zinc-100 space-y-1.5">
+              <div className="flex justify-between text-sm text-zinc-600"><span>{t("quoteForm.subtotal")}</span><span className="tabular-nums">{formatMoney(quote.subtotal, quote.currency)}</span></div>
+              {Number(quote.discount_rate) > 0 && (
+                <div className="flex justify-between text-sm text-red-600"><span>{t("quoteForm.discount")} (%{quote.discount_rate})</span><span className="tabular-nums">- {formatMoney(quote.discount_amount, quote.currency)}</span></div>
+              )}
+            </div>
+            <div className="pt-2.5 border-t border-zinc-100 flex items-end justify-between">
+              <span className="text-[10px] uppercase tracking-wider text-zinc-400">{t("quoteForm.grandTotal")}</span>
+              <span className="font-heading text-2xl font-bold text-brand tabular-nums">{formatMoney(quote.grand_total, quote.currency)}</span>
+            </div>
+          </div>
+        </aside>
       </div>
     </FullBleed>
+  );
+}
+
+function MetaRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-zinc-500">{label}</span>
+      <span className="text-zinc-900 font-medium tabular-nums">{value}</span>
+    </div>
   );
 }

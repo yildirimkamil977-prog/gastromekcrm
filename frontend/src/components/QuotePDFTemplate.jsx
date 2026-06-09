@@ -138,6 +138,16 @@ export default function QuotePDFTemplate({ quote, customer, company, signed = fa
                   {it.code && <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 8, color: "#64748b", textTransform: "uppercase" }}>#{it.code}</div>}
                   <div style={{ fontWeight: 600 }}>{it.title}</div>
                   {it.description && <div style={{ color: "#475569", marginTop: 2 }}>{it.description}</div>}
+                  {Array.isArray(it.features) && it.features.filter((f) => (f || "").trim()).length > 0 && (
+                    <ul style={{ margin: "4px 0 0", paddingLeft: 0, listStyle: "none" }}>
+                      {it.features.filter((f) => (f || "").trim()).map((f, fi) => (
+                        <li key={fi} style={{ fontSize: 9, color: "#475569", lineHeight: 1.5, display: "flex", gap: 6 }}>
+                          <span style={{ color: "#70c800", fontWeight: 700 }}>•</span>
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </td>
                 <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{Number(it.quantity) || 0}</td>
                 <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{formatMoney(it.unit_price, currency)}</td>

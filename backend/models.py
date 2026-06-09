@@ -87,6 +87,7 @@ class QuoteItem(BaseModel):
     quantity: float = 1
     unit_price: float = 0
     discount_percent: float = 0  # per-line discount (not used by global; kept for flexibility)
+    features: List[str] = []  # optional bullet specs/technical features shown on the quote
 
 
 class QuoteBase(BaseModel):
@@ -141,13 +142,13 @@ class BankAccount(BaseModel):
 
 
 class CompanySettings(BaseModel):
-    company_name: str = "Gastromek"
+    company_name: str = "Gastromek GmbH"
     tagline: str = "Industrielle Küchenausstattung"
-    logo_url: str = ""
-    website: str = ""
-    phone: str = ""
-    email: str = ""
-    address: str = ""
+    logo_url: str = "https://customer-assets.emergentagent.com/job_7f4dcb13-bb80-4983-8764-b667de5bb352/artifacts/k8zjh8tf_gastromek-logo.png"
+    website: str = "www.gastromek.de"
+    phone: str = "+49 163 9830039"
+    email: str = "info@gastromek.de"
+    address: str = "Hörderstr. 288, 58454 Witten"
     tax_office: str = ""
     tax_number: str = ""
     bank_name: str = ""
@@ -156,7 +157,7 @@ class CompanySettings(BaseModel):
     # Up to 3 bank accounts for PDF footer
     banks: List[BankAccount] = []
     # Authorized person (used for PDF signature)
-    authorized_person_name: str = "Murat Arısoy"
+    authorized_person_name: str = ""
     # Social media
     social_instagram: str = ""
     social_facebook: str = ""

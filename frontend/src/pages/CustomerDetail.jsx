@@ -3,16 +3,16 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { api, formatApiError, formatDate, formatMoney } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
 import { PageBand, FullBleed } from "../components/Blueprint";
-import StatusBadge from "../components/StatusBadge";
+import StatusBadge, { STATUS_MAP } from "../components/StatusBadge";
 import Pagination from "../components/Pagination";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { Plus, Save } from "lucide-react";
+import { Plus, Save, Phone, Mail, MessageCircle, MapPin, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
-const QUOTES_PAGE_SIZE = 10;
+const QUOTES_PAGE_SIZE = 8;
 
 export default function CustomerDetail() {
   const { t } = useT();
@@ -63,6 +63,16 @@ export default function CustomerDetail() {
   if (loading) return <div className="p-8 text-zinc-400">{t("common.loading")}</div>;
   if (!customer) return <div className="p-8 text-zinc-400">{t("customerDetail.notFound")}</div>;
 
+  const initials = (customer.company_name || "?").charAt(0).toUpperCase();
+  const waNum = (customer.whatsapp || customer.phone || "").replace(/[^\d+]/g, "").replace(/^\+/, "");
+
+  const chips = [
+    customer.phone && { icon: Phone, label: customer.phone, href: `tel:${customer.phone}` },
+    customer.email && { icon: Mail, label: customer.email, href: `mailto:${customer.email}` },
+    waNum && { icon: MessageCircle, label: "WhatsApp", href: `https://wa.me/${waNum}`, ext: true, green: true },
+    customer.city && { icon: MapPin, label: customer.city },
+  ].filter(Boolean);
+
   return (
     <FullBleed testid="customer-detail">
       <PageBand
@@ -81,52 +91,80 @@ export default function CustomerDetail() {
         </Button>
       </PageBand>
 
-      <div className="px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 lg:divide-x-0">
-        {/* Company info */}
-        <div className="lg:col-span-1 bg-white p-6 space-y-4">
-          <h3 className="font-heading font-semibold flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-brand" />{t("customerDetail.companyInfo")}</h3>
-          <Row label={t("customerDetail.companyName")}><Input value={customer.company_name || ""} onChange={(e) => setCustomer({ ...customer, company_name: e.target.value })} /></Row>
-          <Row label={t("customers.thTaxNo")}><Input value={customer.tax_number || ""} onChange={(e) => setCustomer({ ...customer, tax_number: e.target.value })} /></Row>
-          <Row label={t("customers.taxOffice")}><Input value={customer.tax_office || ""} onChange={(e) => setCustomer({ ...customer, tax_office: e.target.value })} /></Row>
-          <Row label={t("customers.contactPerson")}><Input value={customer.contact_person || ""} onChange={(e) => setCustomer({ ...customer, contact_person: e.target.value })} /></Row>
-          <Row label={t("customers.phone")}><Input value={customer.phone || ""} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} /></Row>
-          <Row label="WhatsApp"><Input value={customer.whatsapp || ""} onChange={(e) => setCustomer({ ...customer, whatsapp: e.target.value })} /></Row>
-          <Row label={t("customers.email")}><Input type="email" value={customer.email || ""} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} /></Row>
-          <Row label={t("customers.city")}><Input value={customer.city || ""} onChange={(e) => setCustomer({ ...customer, city: e.target.value })} /></Row>
-          <Row label={t("customers.address")}><Textarea value={customer.address || ""} onChange={(e) => setCustomer({ ...customer, address: e.target.value })} rows={2} /></Row>
-          <Row label={t("customers.notes")}><Textarea value={customer.notes || ""} onChange={(e) => setCustomer({ ...customer, notes: e.target.value })} rows={3} /></Row>
+      {/* Hero */}
+      <div className="px-4 sm:px-6 lg:px-8 py-6 border-b border-zinc-200 bg-white">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+          <span className="w-20 h-20 rounded-2xl bg-brand text-white font-heading font-bold flex items-center justify-center text-3xl shrink-0">{initials}</span>
+          <div className="min-w-0">
+            <div className="font-heading text-2xl font-bold tracking-tight text-zinc-950">{customer.company_name}</div>
+            {customer.contact_person && <div className="text-sm text-zinc-500 mt-0.5">{customer.contact_person}</div>}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {chips.map((ch, i) => {
+                const Cmp = ch.href ? "a" : "div";
+                return (
+                  <Cmp
+                    key={i}
+                    href={ch.href}
+                    {...(ch.ext ? { target: "_blank", rel: "noreferrer" } : {})}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${ch.green ? "border-green-300 text-green-700 hover:bg-green-50" : "border-zinc-200 text-zinc-600 hover:border-brand/40 hover:text-brand"}`}
+                  >
+                    <ch.icon size={13} strokeWidth={1.5} /> {ch.label}
+                  </Cmp>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-5 gap-5">
+        {/* Editable info */}
+        <div className="lg:col-span-2 bg-white border border-zinc-200">
+          <div className="flex items-center px-5 h-14 border-b border-zinc-200"><h3 className="font-heading font-semibold flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-brand" />{t("customerDetail.companyInfo")}</h3></div>
+          <div className="p-5 space-y-4">
+            <Row label={t("customerDetail.companyName")}><Input value={customer.company_name || ""} onChange={(e) => setCustomer({ ...customer, company_name: e.target.value })} /></Row>
+            <Row label={t("customers.thTaxNo")}><Input value={customer.tax_number || ""} onChange={(e) => setCustomer({ ...customer, tax_number: e.target.value })} /></Row>
+            <Row label={t("customers.taxOffice")}><Input value={customer.tax_office || ""} onChange={(e) => setCustomer({ ...customer, tax_office: e.target.value })} /></Row>
+            <Row label={t("customers.contactPerson")}><Input value={customer.contact_person || ""} onChange={(e) => setCustomer({ ...customer, contact_person: e.target.value })} /></Row>
+            <div className="grid grid-cols-2 gap-3">
+              <Row label={t("customers.phone")}><Input value={customer.phone || ""} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} /></Row>
+              <Row label="WhatsApp"><Input value={customer.whatsapp || ""} onChange={(e) => setCustomer({ ...customer, whatsapp: e.target.value })} /></Row>
+            </div>
+            <Row label={t("customers.email")}><Input type="email" value={customer.email || ""} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} /></Row>
+            <Row label={t("customers.city")}><Input value={customer.city || ""} onChange={(e) => setCustomer({ ...customer, city: e.target.value })} /></Row>
+            <Row label={t("customers.address")}><Textarea value={customer.address || ""} onChange={(e) => setCustomer({ ...customer, address: e.target.value })} rows={2} /></Row>
+            <Row label={t("customers.notes")}><Textarea value={customer.notes || ""} onChange={(e) => setCustomer({ ...customer, notes: e.target.value })} rows={3} /></Row>
+          </div>
         </div>
 
-        {/* Quotes ledger */}
-        <div className="lg:col-span-2 bg-white">
-          <div className="flex items-center px-6 h-14 border-b border-zinc-200">
+        {/* Quotes list */}
+        <div className="lg:col-span-3 bg-white border border-zinc-200">
+          <div className="flex items-center px-5 h-14 border-b border-zinc-200">
             <h3 className="font-heading font-semibold flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-brand" />{t("customerDetail.quotes")} <span className="text-zinc-400 text-sm font-normal">({quotes.length})</span></h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold bg-zinc-50 border-b border-zinc-200">
-                  <th className="px-6 py-3">{t("table.quoteNo")}</th>
-                  <th className="px-4 py-3 hidden sm:table-cell">{t("table.date")}</th>
-                  <th className="px-4 py-3 hidden md:table-cell">{t("table.preparedBy")}</th>
-                  <th className="px-4 py-3 text-right">{t("table.amount")}</th>
-                  <th className="px-6 py-3">{t("table.status")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100">
-                {quotes.length === 0 && <tr><td colSpan={5} className="p-12 text-center text-zinc-400 text-sm">{t("dashboard.noQuotes")}</td></tr>}
-                {pagedQuotes.map((q) => (
-                  <tr key={q.id} className="hover:bg-zinc-50 transition-colors text-sm">
-                    <td className="px-6 py-3 font-mono text-xs"><Link to={`/teklifler/${q.id}`} className="text-brand hover:underline font-semibold">{q.quote_no}</Link></td>
-                    <td className="px-4 py-3 text-zinc-500 hidden sm:table-cell">{formatDate(q.issue_date)}</td>
-                    <td className="px-4 py-3 text-zinc-500 hidden md:table-cell">{q.creator?.name || "-"}</td>
-                    <td className="px-4 py-3 font-semibold text-zinc-900 text-right tabular-nums">{formatMoney(q.grand_total, q.currency)}</td>
-                    <td className="px-6 py-3"><StatusBadge status={q.status} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {quotes.length === 0 ? (
+            <div className="p-12 text-center text-zinc-400 text-sm">{t("dashboard.noQuotes")}</div>
+          ) : (
+            <div className="divide-y divide-zinc-100">
+              {pagedQuotes.map((q) => {
+                const meta = STATUS_MAP[q.status] || STATUS_MAP.taslak;
+                return (
+                  <Link key={q.id} to={`/teklifler/${q.id}`} className="group relative flex items-center gap-4 pl-5 pr-4 py-3.5 hover:bg-zinc-50 transition-colors">
+                    <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: meta.bar }} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-brand bg-brand-light px-2 py-0.5 rounded">{q.quote_no}</span>
+                        <StatusBadge status={q.status} />
+                      </div>
+                      <div className="text-xs text-zinc-400 mt-1">{formatDate(q.issue_date)}{q.creator?.name && <> · {q.creator.name}</>}</div>
+                    </div>
+                    <div className="font-heading font-bold text-zinc-950 tabular-nums">{formatMoney(q.grand_total, q.currency)}</div>
+                    <ChevronRight size={16} strokeWidth={1.5} className="text-zinc-300 group-hover:text-brand transition-colors" />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
           <div className="border-t border-zinc-200">
             <Pagination page={quotesPage} pageSize={QUOTES_PAGE_SIZE} total={quotes.length} onPageChange={setQuotesPage} compact />
           </div>

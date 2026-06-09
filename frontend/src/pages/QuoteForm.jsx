@@ -13,7 +13,7 @@ import {
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "../components/ui/popover";
-import { Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Save, Search, Trash2, X, ListPlus } from "lucide-react";
 import { toast } from "sonner";
 
 function plusDaysISO(days) {
@@ -22,10 +22,20 @@ function plusDaysISO(days) {
 
 const STATUS_KEYS = ["taslak", "gonderildi", "kabul", "red", "suresi_doldu"];
 
-const SECTION = "bg-white border border-zinc-200";
-const SECTION_HEAD = "flex items-center justify-between px-5 h-14 border-b border-zinc-200";
-const SECTION_TITLE = "font-heading font-semibold text-zinc-900 flex items-center gap-2";
-const DOT = <span className="w-1.5 h-1.5 rounded-full bg-brand" />;
+function Step({ n, title, action, children }) {
+  return (
+    <section className="bg-white border border-zinc-200">
+      <div className="flex items-center justify-between gap-3 px-5 h-14 border-b border-zinc-200">
+        <div className="flex items-center gap-3">
+          <span className="w-7 h-7 rounded-full bg-zinc-900 text-white text-[13px] font-heading font-bold flex items-center justify-center">{n}</span>
+          <h3 className="font-heading font-semibold text-zinc-900">{title}</h3>
+        </div>
+        {action}
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
 
 export default function QuoteForm() {
   const { t } = useT();
@@ -71,7 +81,7 @@ export default function QuoteForm() {
           setValidUntil((d.valid_until || "").slice(0, 10));
           setNotes(d.notes || "");
           setStatus(d.status);
-          setItems(d.items || []);
+          setItems((d.items || []).map((it) => ({ ...it, features: it.features || [] })));
         } else if (searchParams.get("customer")) {
           const pre = await api.get(`/customers/${searchParams.get("customer")}`);
           setSelectedCustomer(pre.data);
@@ -121,7 +131,7 @@ export default function QuoteForm() {
   const addProduct = (p) => {
     setItems((xs) => [
       ...xs,
-      { product_id: p.id, code: p.code || p.gtin || "", title: p.title, description: "", image: p.image, quantity: 1, unit_price: p.price, discount_percent: 0 },
+      { product_id: p.id, code: p.code || p.gtin || "", title: p.title, description: "", image: p.image, quantity: 1, unit_price: p.price, discount_percent: 0, features: [] },
     ]);
     setProductQuery("");
     setProductResults([]);
@@ -129,7 +139,7 @@ export default function QuoteForm() {
   };
 
   const addBlankItem = () => {
-    setItems((xs) => [...xs, { product_id: null, code: "", title: t("quoteForm.customItemDefault"), image: "", quantity: 1, unit_price: 0, discount_percent: 0 }]);
+    setItems((xs) => [...xs, { product_id: null, code: "", title: t("quoteForm.customItemDefault"), image: "", quantity: 1, unit_price: 0, discount_percent: 0, features: [] }]);
   };
 
   const updateItem = (idx, patch) => setItems((xs) => xs.map((x, i) => (i === idx ? { ...x, ...patch } : x)));
@@ -153,6 +163,7 @@ export default function QuoteForm() {
           quantity: Number(x.quantity) || 0,
           unit_price: Number(x.unit_price) || 0,
           discount_percent: Number(x.discount_percent) || 0,
+          features: (x.features || []).map((f) => (f || "").trim()).filter(Boolean),
         })),
       };
       let res;
@@ -194,6 +205,18 @@ export default function QuoteForm() {
     </>
   );
 
+  const itemsAction = (
+    <div className="flex gap-2">
+      <Popover open={prodPopOpen} onOpenChange={setProdPopOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" data-testid="add-product-btn"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.addProduct")}</Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-0"><ProductSearchList onPick={addProduct} /></PopoverContent>
+      </Popover>
+      <Button variant="outline" size="sm" onClick={addBlankItem} data-testid="add-custom-item-btn"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.customItem")}</Button>
+    </div>
+  );
+
   return (
     <FullBleed testid="quote-form">
       <PageBand
@@ -208,29 +231,31 @@ export default function QuoteForm() {
       </PageBand>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* LEFT */}
+        {/* LEFT — guided steps */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Customer */}
-          <section className={SECTION}>
-            <div className={SECTION_HEAD}><h3 className={SECTION_TITLE}>{DOT}{t("quoteForm.customer")}</h3></div>
-            <div className="p-5">
-              <div className="relative mb-2">
-                <Search size={16} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <Input className="pl-9" placeholder={t("quoteForm.customerSearchPlaceholder")} value={customerQuery} onChange={(e) => setCustomerQuery(e.target.value)} data-testid="quote-customer-search" />
+          {/* Step 1 — customer */}
+          <Step n={1} title={t("quoteForm.customer")}>
+            <div className="relative mb-2">
+              <Search size={16} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <Input className="pl-9" placeholder={t("quoteForm.customerSearchPlaceholder")} value={customerQuery} onChange={(e) => setCustomerQuery(e.target.value)} data-testid="quote-customer-search" />
+            </div>
+            {customerQuery && (
+              <div className="border border-zinc-200 rounded-lg max-h-60 overflow-y-auto">
+                {customers.slice(0, 20).map((c) => (
+                  <button key={c.id} type="button" onClick={() => { setCustomerId(c.id); setSelectedCustomer(c); setCustomerQuery(""); }} className="w-full text-left px-4 py-2 hover:bg-zinc-50 border-b border-zinc-100 last:border-0" data-testid={`quote-customer-option-${c.id}`}>
+                    <div className="font-medium text-sm">{c.company_name}</div>
+                    <div className="text-xs text-zinc-500">{c.tax_number || ""} {c.tax_number && c.phone ? "·" : ""} {c.phone || ""}</div>
+                  </button>
+                ))}
+                {customers.length === 0 && <div className="p-3 text-sm text-zinc-400">{t("quoteForm.noCustomerResult")}</div>}
               </div>
-              {customerQuery && (
-                <div className="border border-zinc-200 rounded-lg max-h-60 overflow-y-auto">
-                  {customers.slice(0, 20).map((c) => (
-                    <button key={c.id} type="button" onClick={() => { setCustomerId(c.id); setSelectedCustomer(c); setCustomerQuery(""); }} className="w-full text-left px-4 py-2 hover:bg-zinc-50 border-b border-zinc-100 last:border-0" data-testid={`quote-customer-option-${c.id}`}>
-                      <div className="font-medium text-sm">{c.company_name}</div>
-                      <div className="text-xs text-zinc-500">{c.tax_number || ""} {c.tax_number && c.phone ? "·" : ""} {c.phone || ""}</div>
-                    </button>
-                  ))}
-                  {customers.length === 0 && <div className="p-3 text-sm text-zinc-400">{t("quoteForm.noCustomerResult")}</div>}
-                </div>
-              )}
-              {selectedCustomer && (
-                <div className="mt-3 border border-brand/40 bg-brand-light rounded-lg p-3 flex items-start justify-between">
+            )}
+            {selectedCustomer && (
+              <div className="mt-3 border border-brand/40 bg-brand-light rounded-lg p-3 flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-10 h-10 rounded-md bg-brand text-white font-heading font-bold flex items-center justify-center text-sm shrink-0">
+                    {(selectedCustomer.company_name || "?").charAt(0).toUpperCase()}
+                  </span>
                   <div>
                     <div className="font-semibold text-zinc-900">{selectedCustomer.company_name}</div>
                     <div className="text-xs text-zinc-600">
@@ -239,63 +264,46 @@ export default function QuoteForm() {
                       {selectedCustomer.email ? ` · ${selectedCustomer.email}` : ""}
                     </div>
                   </div>
-                  <button type="button" onClick={() => { setCustomerId(""); setSelectedCustomer(null); }} className="text-zinc-500 hover:text-zinc-900"><X size={16} /></button>
                 </div>
-              )}
-            </div>
-          </section>
-
-          {/* Items */}
-          <section className={SECTION}>
-            <div className={SECTION_HEAD}>
-              <h3 className={SECTION_TITLE}>{DOT}{t("quoteForm.items")}</h3>
-              <div className="flex gap-2">
-                <Popover open={prodPopOpen} onOpenChange={setProdPopOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" data-testid="add-product-btn"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.addProduct")}</Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-96 p-0"><ProductSearchList onPick={addProduct} /></PopoverContent>
-                </Popover>
-                <Button variant="outline" size="sm" onClick={addBlankItem} data-testid="add-custom-item-btn"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.customItem")}</Button>
+                <button type="button" onClick={() => { setCustomerId(""); setSelectedCustomer(null); }} className="text-zinc-500 hover:text-zinc-900"><X size={16} /></button>
               </div>
-            </div>
-            <div className="p-5">
-              {items.length === 0 ? (
-                <div className="py-10 text-center text-sm text-zinc-400 border border-dashed border-zinc-200 rounded-lg">{t("quoteForm.noItems")}</div>
-              ) : (
-                <>
-                  <div className="space-y-3">
-                    {items.map((it, i) => (
-                      <ItemRow key={i} idx={i} item={it} currency={currency} onChange={(patch) => updateItem(i, patch)} onRemove={() => removeItem(i)} />
-                    ))}
-                  </div>
-                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-zinc-100">
-                    <Popover open={prodPopOpenBottom} onOpenChange={setProdPopOpenBottom}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" data-testid="add-product-btn-bottom"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.addProduct")}</Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-96 p-0" align="end"><ProductSearchList onPick={(p) => { addProduct(p); setProdPopOpenBottom(false); }} /></PopoverContent>
-                    </Popover>
-                    <Button variant="outline" size="sm" onClick={addBlankItem} data-testid="add-custom-item-btn-bottom"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.customItem")}</Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
+            )}
+          </Step>
 
-          {/* Notes */}
-          <section className={SECTION}>
-            <div className={SECTION_HEAD}><h3 className={SECTION_TITLE}>{DOT}{t("quoteForm.notesTitle")}</h3></div>
-            <div className="p-5">
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder={t("quoteForm.notesPlaceholder")} data-testid="quote-notes" />
-            </div>
-          </section>
+          {/* Step 2 — items */}
+          <Step n={2} title={t("quoteForm.items")} action={itemsAction}>
+            {items.length === 0 ? (
+              <div className="py-10 text-center text-sm text-zinc-400 border border-dashed border-zinc-200 rounded-lg">{t("quoteForm.noItems")}</div>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {items.map((it, i) => (
+                    <ItemRow key={i} idx={i} item={it} currency={currency} onChange={(patch) => updateItem(i, patch)} onRemove={() => removeItem(i)} />
+                  ))}
+                </div>
+                <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-zinc-100">
+                  <Popover open={prodPopOpenBottom} onOpenChange={setProdPopOpenBottom}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" data-testid="add-product-btn-bottom"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.addProduct")}</Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-96 p-0" align="end"><ProductSearchList onPick={(p) => { addProduct(p); setProdPopOpenBottom(false); }} /></PopoverContent>
+                  </Popover>
+                  <Button variant="outline" size="sm" onClick={addBlankItem} data-testid="add-custom-item-btn-bottom"><Plus size={14} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.customItem")}</Button>
+                </div>
+              </>
+            )}
+          </Step>
+
+          {/* Step 3 — notes */}
+          <Step n={3} title={t("quoteForm.notesTitle")}>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder={t("quoteForm.notesPlaceholder")} data-testid="quote-notes" />
+          </Step>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT — settings + visual summary */}
         <div className="space-y-5">
-          <section className={SECTION}>
-            <div className={SECTION_HEAD}><h3 className={SECTION_TITLE}>{DOT}{t("quoteForm.settings")}</h3></div>
+          <section className="bg-white border border-zinc-200">
+            <div className="flex items-center px-5 h-14 border-b border-zinc-200"><h3 className="font-heading font-semibold text-zinc-900 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-brand" />{t("quoteForm.settings")}</h3></div>
             <div className="p-5 space-y-4">
               <div><Label>{t("quoteForm.currency")}</Label>
                 <Select value={currency} onValueChange={setCurrency}>
@@ -323,19 +331,22 @@ export default function QuoteForm() {
             </div>
           </section>
 
-          <section className={`${SECTION} lg:sticky lg:top-4`} data-testid="quote-totals">
-            <div className={SECTION_HEAD}><h3 className={SECTION_TITLE}>{DOT}{t("quoteForm.total")}</h3></div>
+          {/* Visual total */}
+          <section className="bg-zinc-900 text-white lg:sticky lg:top-4" data-testid="quote-totals">
             <div className="p-5">
-              <Row label={t("quoteForm.subtotal")} value={formatMoney(totals.subtotal, currency)} />
-              {Number(discountRate) > 0 && (
-                <Row label={`${t("quoteForm.discount")} (%${discountRate})`} value={`- ${formatMoney(totals.discAmount, currency)}`} accent="red" />
-              )}
-              <div className="mt-3 pt-3 border-t border-zinc-200 flex items-end justify-between">
-                <div>
-                  <div className="text-sm text-zinc-500 leading-tight">{t("quoteForm.grandTotal")}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-zinc-400 mt-0.5">{t("quoteForm.vatIncluded")}</div>
-                </div>
-                <div className="font-heading text-2xl font-bold text-brand tabular-nums">{formatMoney(totals.grand, currency)}</div>
+              <div className="flex items-center justify-between text-xs uppercase tracking-wider text-zinc-400">
+                <span>{t("quoteForm.items")}</span>
+                <span className="px-2 py-0.5 rounded-full bg-white/10 text-white font-semibold tabular-nums">{items.length}</span>
+              </div>
+              <div className="mt-4 space-y-1.5 text-sm">
+                <div className="flex justify-between text-zinc-300"><span>{t("quoteForm.subtotal")}</span><span className="tabular-nums">{formatMoney(totals.subtotal, currency)}</span></div>
+                {Number(discountRate) > 0 && (
+                  <div className="flex justify-between text-red-300"><span>{t("quoteForm.discount")} (%{discountRate})</span><span className="tabular-nums">- {formatMoney(totals.discAmount, currency)}</span></div>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-400">{t("quoteForm.grandTotal")} · {t("quoteForm.vatIncluded")}</div>
+                <div className="font-heading text-3xl font-bold text-brand tabular-nums mt-1">{formatMoney(totals.grand, currency)}</div>
               </div>
             </div>
           </section>
@@ -345,20 +356,17 @@ export default function QuoteForm() {
   );
 }
 
-function Row({ label, value, bold, accent }) {
-  return (
-    <div className="flex items-center justify-between py-1.5">
-      <div className={`text-sm ${bold ? "font-medium text-zinc-900" : "text-zinc-600"}`}>{label}</div>
-      <div className={`text-sm tabular-nums ${bold ? "font-semibold" : ""} ${accent === "red" ? "text-red-600" : "text-zinc-900"}`}>{value}</div>
-    </div>
-  );
-}
-
 function ItemRow({ item, onChange, onRemove, currency }) {
   const { t } = useT();
   const [editing, setEditing] = useState({});
   const start = (field) => setEditing((x) => ({ ...x, [field]: true }));
   const stop = (field) => setEditing((x) => ({ ...x, [field]: false }));
+
+  const features = item.features || [];
+  const setFeatures = (arr) => onChange({ features: arr });
+  const addFeature = () => setFeatures([...features, ""]);
+  const updateFeature = (i, v) => setFeatures(features.map((f, fi) => (fi === i ? v : f)));
+  const removeFeature = (i) => setFeatures(features.filter((_, fi) => fi !== i));
 
   const editField = (field, type = "text") => (
     editing[field] ? (
@@ -375,7 +383,8 @@ function ItemRow({ item, onChange, onRemove, currency }) {
   const lineAfter = lineTotal - lineTotal * ((Number(item.discount_percent) || 0) / 100);
 
   return (
-    <div className="border border-zinc-200 rounded-lg p-4 hover:border-brand/40 transition-colors">
+    <div className="relative border border-zinc-200 rounded-lg p-4 pl-5 hover:border-brand/40 transition-colors">
+      <span className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-zinc-200 group-hover:bg-brand" />
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-12 md:col-span-2">
           {editing.image ? (
@@ -401,10 +410,31 @@ function ItemRow({ item, onChange, onRemove, currency }) {
           </div>
         </div>
       </div>
-      <div className="flex justify-end mt-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8" data-testid="remove-item-btn">
-          <Trash2 size={13} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.remove")}
-        </Button>
+
+      {/* Optional features / technical specs */}
+      <div className="mt-3 pt-3 border-t border-zinc-100">
+        {features.length > 0 && (
+          <>
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5"><ListPlus size={12} strokeWidth={1.5} className="text-brand" /> {t("quoteForm.features")}</div>
+            <div className="space-y-1.5">
+              {features.map((f, fi) => (
+                <div key={fi} className="flex items-center gap-2">
+                  <span className="text-brand font-bold leading-none">•</span>
+                  <Input value={f} onChange={(e) => updateFeature(fi, e.target.value)} placeholder={t("quoteForm.featurePlaceholder")} className="h-8 text-sm" data-testid={`item-feature-input-${fi}`} />
+                  <button type="button" onClick={() => removeFeature(fi)} className="text-zinc-400 hover:text-red-600 shrink-0" data-testid={`remove-feature-${fi}`}><X size={14} strokeWidth={1.5} /></button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        <div className="flex items-center justify-between mt-2">
+          <button type="button" onClick={addFeature} className="text-xs text-zinc-500 hover:text-brand inline-flex items-center gap-1 font-medium" data-testid="add-feature-btn">
+            <Plus size={13} strokeWidth={1.5} /> {t("quoteForm.addFeature")}
+          </button>
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8" data-testid="remove-item-btn">
+            <Trash2 size={13} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.remove")}
+          </Button>
+        </div>
       </div>
     </div>
   );

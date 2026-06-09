@@ -45,9 +45,9 @@ def compute_totals(items, vat_rate: float, discount_rate: float) -> dict:
 
 
 async def generate_quote_no(db, parent: dict | None = None, revision_number: int = 0) -> str:
-    """Generate AR-YYYYMM-NNNN; revisions append -Rx."""
+    """Generate GM-YYYYMM-NNNN; revisions append -Rx."""
     now = datetime.now(timezone.utc)
-    prefix = f"AR-{now.year}{now.month:02d}-"
+    prefix = f"GM-{now.year}{now.month:02d}-"
     if parent and revision_number > 0:
         return f"{parent['quote_no']}-R{revision_number}"
     # find last with prefix
