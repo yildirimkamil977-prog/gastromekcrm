@@ -16,7 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import {
-  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, PenTool,
+  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,7 +42,6 @@ export default function QuoteView() {
   const [waOpen, setWaOpen] = useState(false);
   const [waNumber, setWaNumber] = useState("");
   const [waMessage, setWaMessage] = useState("");
-  const [signed, setSigned] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -267,10 +266,6 @@ export default function QuoteView() {
           {t("quoteView.downloadPdf")}
         </Button>
         <Button variant="outline" onClick={() => window.print()} data-testid="print-btn"><Printer size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.print")}</Button>
-        <Button variant="outline" onClick={() => setSigned((s) => !s)} className={signed ? "bg-brand/10 border-brand text-brand hover:bg-brand/20 hover:text-brand" : ""} data-testid="sign-toggle-btn">
-          <PenTool size={14} strokeWidth={1.5} className="mr-2" />
-          {signed ? t("quoteView.unsign") : t("quoteView.sign")}
-        </Button>
 
         <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
           <DialogTrigger asChild>
@@ -338,7 +333,7 @@ export default function QuoteView() {
           {/* PDF preview — paper on a desk */}
           <div ref={pdfRef} className="overflow-auto p-3 sm:p-6 rounded-lg" style={{ background: "#27272a" }}>
             <div className="mx-auto shadow-2xl" style={{ width: "210mm", minWidth: "210mm" }}>
-              <QuotePDFTemplate quote={quote} customer={customer} company={company} signed={signed} />
+              <QuotePDFTemplate quote={quote} customer={customer} company={company} />
             </div>
           </div>
         </div>
@@ -366,6 +361,9 @@ export default function QuoteView() {
             </div>
             <div className="pt-2.5 border-t border-zinc-100 space-y-1.5">
               <div className="flex justify-between text-sm text-zinc-600"><span>{t("quoteForm.subtotal")}</span><span className="tabular-nums">{formatMoney(quote.subtotal, quote.currency)}</span></div>
+              {Number(quote.vat_rate) > 0 && (
+                <div className="flex justify-between text-sm text-zinc-600"><span>{t("quoteForm.vatLine")} (%{quote.vat_rate})</span><span className="tabular-nums">+ {formatMoney(quote.vat_amount, quote.currency)}</span></div>
+              )}
               {Number(quote.discount_rate) > 0 && (
                 <div className="flex justify-between text-sm text-red-600"><span>{t("quoteForm.discount")} (%{quote.discount_rate})</span><span className="tabular-nums">- {formatMoney(quote.discount_amount, quote.currency)}</span></div>
               )}

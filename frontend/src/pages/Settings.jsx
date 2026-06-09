@@ -112,7 +112,6 @@ export default function Settings() {
                 <div><Label>{t("settings.taxOffice")}</Label><Input value={form.tax_office} onChange={(e) => set("tax_office", e.target.value)} /></div>
                 <div><Label>{t("settings.taxNumber")}</Label><Input value={form.tax_number} onChange={(e) => set("tax_number", e.target.value)} /></div>
                 <div className="md:col-span-2"><Label>{t("settings.address")}</Label><Textarea rows={2} value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
-                <div className="md:col-span-2"><Label>{t("settings.authorizedPerson")}</Label><Input value={form.authorized_person_name} onChange={(e) => set("authorized_person_name", e.target.value)} placeholder={t("settings.fullNamePlaceholder")} data-testid="settings-authorized-person" /></div>
               </div>
             </TabsContent>
 

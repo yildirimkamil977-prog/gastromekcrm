@@ -49,6 +49,7 @@ export default function QuoteForm() {
   const [customerId, setCustomerId] = useState(searchParams.get("customer") || "");
   const [customerQuery, setCustomerQuery] = useState("");
   const [currency, setCurrency] = useState("TRY");
+  const [vatRate, setVatRate] = useState(19);
   const [discountRate, setDiscountRate] = useState(0);
   const [validUntil, setValidUntil] = useState(plusDaysISO(30));
   const [notes, setNotes] = useState("");
@@ -77,6 +78,7 @@ export default function QuoteForm() {
           setCustomerId(d.customer_id);
           setSelectedCustomer(d.customer || null);
           setCurrency(d.currency);
+          setVatRate(d.vat_rate ?? 0);
           setDiscountRate(d.discount_rate);
           setValidUntil((d.valid_until || "").slice(0, 10));
           setNotes(d.notes || "");
@@ -123,10 +125,12 @@ export default function QuoteForm() {
       const line = (Number(it.quantity) || 0) * (Number(it.unit_price) || 0);
       sub += line - line * ((Number(it.discount_percent) || 0) / 100);
     });
-    const discAmount = sub * ((Number(discountRate) || 0) / 100);
-    const grand = sub - discAmount;
-    return { subtotal: sub, discAmount, grand };
-  }, [items, discountRate]);
+    const vatAmount = sub * ((Number(vatRate) || 0) / 100);
+    const withVat = sub + vatAmount;
+    const discAmount = withVat * ((Number(discountRate) || 0) / 100);
+    const grand = withVat - discAmount;
+    return { subtotal: sub, vatAmount, withVat, discAmount, grand };
+  }, [items, vatRate, discountRate]);
 
   const addProduct = (p) => {
     setItems((xs) => [
@@ -153,7 +157,7 @@ export default function QuoteForm() {
       const payload = {
         customer_id: customerId,
         currency,
-        vat_rate: 0,
+        vat_rate: Number(vatRate) || 0,
         discount_rate: Number(discountRate) || 0,
         valid_until: validUntil,
         notes,
@@ -317,6 +321,10 @@ export default function QuoteForm() {
               </div>
               <div><Label>{t("quoteForm.validUntil")}</Label><Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="mt-1" data-testid="quote-valid-until" /></div>
               <div>
+                <Label>{t("quoteForm.vat")} <span className="text-xs text-zinc-500 font-normal">{t("quoteForm.vatHint")}</span></Label>
+                <Input type="number" step="0.01" value={vatRate} onChange={(e) => setVatRate(e.target.value)} className="mt-1" data-testid="quote-vat-rate" />
+              </div>
+              <div>
                 <Label>{t("quoteForm.discount")} <span className="text-xs text-zinc-500 font-normal">{t("quoteForm.discountHint")}</span></Label>
                 <Input type="number" step="0.01" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} className="mt-1" data-testid="quote-discount-rate" />
               </div>
@@ -340,6 +348,9 @@ export default function QuoteForm() {
               </div>
               <div className="mt-4 space-y-1.5 text-sm">
                 <div className="flex justify-between text-zinc-300"><span>{t("quoteForm.subtotal")}</span><span className="tabular-nums">{formatMoney(totals.subtotal, currency)}</span></div>
+                {Number(vatRate) > 0 && (
+                  <div className="flex justify-between text-zinc-300"><span>{t("quoteForm.vatLine")} (%{vatRate})</span><span className="tabular-nums">+ {formatMoney(totals.vatAmount, currency)}</span></div>
+                )}
                 {Number(discountRate) > 0 && (
                   <div className="flex justify-between text-red-300"><span>{t("quoteForm.discount")} (%{discountRate})</span><span className="tabular-nums">- {formatMoney(totals.discAmount, currency)}</span></div>
                 )}
@@ -359,13 +370,18 @@ export default function QuoteForm() {
 function ItemRow({ item, onChange, onRemove, currency }) {
   const { t } = useT();
   const [editing, setEditing] = useState({});
+  const [newFeature, setNewFeature] = useState("");
   const start = (field) => setEditing((x) => ({ ...x, [field]: true }));
   const stop = (field) => setEditing((x) => ({ ...x, [field]: false }));
 
   const features = item.features || [];
   const setFeatures = (arr) => onChange({ features: arr });
-  const addFeature = () => setFeatures([...features, ""]);
-  const updateFeature = (i, v) => setFeatures(features.map((f, fi) => (fi === i ? v : f)));
+  const commitNewFeature = () => {
+    const v = newFeature.trim();
+    if (!v) return;
+    setFeatures([...features, v]);
+    setNewFeature("");
+  };
   const removeFeature = (i) => setFeatures(features.filter((_, fi) => fi !== i));
 
   const editField = (field, type = "text") => (
@@ -411,26 +427,31 @@ function ItemRow({ item, onChange, onRemove, currency }) {
         </div>
       </div>
 
-      {/* Optional features / technical specs */}
+      {/* Optional features / technical specs — compact chips */}
       <div className="mt-3 pt-3 border-t border-zinc-100">
-        {features.length > 0 && (
-          <>
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5"><ListPlus size={12} strokeWidth={1.5} className="text-brand" /> {t("quoteForm.features")}</div>
-            <div className="space-y-1.5">
-              {features.map((f, fi) => (
-                <div key={fi} className="flex items-center gap-2">
-                  <span className="text-brand font-bold leading-none">•</span>
-                  <Input value={f} onChange={(e) => updateFeature(fi, e.target.value)} placeholder={t("quoteForm.featurePlaceholder")} className="h-8 text-sm" data-testid={`item-feature-input-${fi}`} />
-                  <button type="button" onClick={() => removeFeature(fi)} className="text-zinc-400 hover:text-red-600 shrink-0" data-testid={`remove-feature-${fi}`}><X size={14} strokeWidth={1.5} /></button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        <div className="flex items-center justify-between mt-2">
-          <button type="button" onClick={addFeature} className="text-xs text-zinc-500 hover:text-brand inline-flex items-center gap-1 font-medium" data-testid="add-feature-btn">
-            <Plus size={13} strokeWidth={1.5} /> {t("quoteForm.addFeature")}
-          </button>
+        <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-wider text-zinc-500">
+          <ListPlus size={12} strokeWidth={1.5} className="text-brand" /> {t("quoteForm.features")}
+          {features.length > 0 && <span className="px-1.5 rounded-full bg-brand-light text-brand font-semibold normal-case tracking-normal">{features.length}</span>}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {features.map((f, fi) => (
+            <span key={fi} className="inline-flex items-center gap-1 max-w-full pl-2 pr-1 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs text-zinc-700" data-testid={`item-feature-chip-${fi}`}>
+              <span className="text-brand font-bold leading-none">•</span>
+              <span className="truncate">{f}</span>
+              <button type="button" onClick={() => removeFeature(fi)} className="text-zinc-400 hover:text-red-600 shrink-0" data-testid={`remove-feature-${fi}`}><X size={12} strokeWidth={2} /></button>
+            </span>
+          ))}
+          <Input
+            value={newFeature}
+            onChange={(e) => setNewFeature(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitNewFeature(); } }}
+            onBlur={commitNewFeature}
+            placeholder={t("quoteForm.featurePlaceholder")}
+            className="h-7 w-48 text-xs rounded-full"
+            data-testid="item-feature-new-input"
+          />
+        </div>
+        <div className="flex justify-end mt-2">
           <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8" data-testid="remove-item-btn">
             <Trash2 size={13} strokeWidth={1.5} className="mr-1" /> {t("quoteForm.remove")}
           </Button>
