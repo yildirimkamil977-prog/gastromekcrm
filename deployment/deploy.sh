@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ArıCRM - Ubuntu 24.04 VPS bootstrap + deploy script
+# Gastromek CRM - Ubuntu 24.04 VPS bootstrap + deploy script
 # Run as root on a fresh Hetzner VPS.
 #
 # Usage:
@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-echo "==> ArıCRM deployment starting on $(hostname)"
+echo "==> Gastromek CRM deployment starting on $(hostname)"
 
 # --- 1. Basic hardening + updates --------------------------------------------
 export DEBIAN_FRONTEND=noninteractive
@@ -37,12 +37,12 @@ fi
 systemctl enable --now docker
 
 # --- 4. Clone / update code --------------------------------------------------
-APP_DIR="/opt/aricrm"
+APP_DIR="/opt/gastromek"
 REPO_URL="${REPO_URL:-}"
 
 if [[ -z "$REPO_URL" && ! -d "$APP_DIR" ]]; then
     echo "!! REPO_URL is not set and $APP_DIR does not exist."
-    echo "   Set REPO_URL env var (e.g. export REPO_URL=https://github.com/USER/aricrm.git) OR"
+    echo "   Set REPO_URL env var (e.g. export REPO_URL=https://github.com/USER/gastromek.git) OR"
     echo "   upload the project to $APP_DIR manually, then re-run this script."
     exit 1
 fi

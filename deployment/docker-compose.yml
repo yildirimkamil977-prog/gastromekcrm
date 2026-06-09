@@ -1,9 +1,9 @@
-# ArıCRM Production Stack
-# Domain: arigastrocrm.com
+# Gastromek CRM Production Stack
+# Domain: gastromekcrm.com
 # Services: MongoDB + FastAPI (backend) + React build + Caddy (reverse proxy + auto HTTPS)
 #
 # Layout assumption:
-#   /opt/aricrm/
+#   /opt/gastromek/
 #     ├── backend/     (FastAPI source + Dockerfile)
 #     ├── frontend/    (React source + Dockerfile)
 #     └── deployment/  (this folder — compose + caddy + .env)
@@ -15,7 +15,7 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      - aricrm_net
+      - gastromek_net
     # Not exposed to host — only reachable inside the docker network.
 
   backend:
@@ -34,7 +34,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
     networks:
-      - aricrm_net
+      - gastromek_net
     # Not exposed to host — Caddy proxies to it over the docker network.
 
   frontend-builder:
@@ -67,7 +67,7 @@ services:
       - backend
       - frontend-builder
     networks:
-      - aricrm_net
+      - gastromek_net
 
 volumes:
   mongo_data:
@@ -77,5 +77,5 @@ volumes:
   caddy_config:
 
 networks:
-  aricrm_net:
+  gastromek_net:
     driver: bridge
