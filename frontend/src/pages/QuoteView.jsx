@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { api, formatApiError } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
-import PageHeader from "../components/PageHeader";
+import { PageBand, FullBleed } from "../components/Blueprint";
 import StatusBadge from "../components/StatusBadge";
 import QuotePDFTemplate from "../components/QuotePDFTemplate";
 import { Button } from "../components/ui/button";
@@ -16,7 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import {
-  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, ArrowLeft, Loader2, Printer, PenTool,
+  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, PenTool,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -139,11 +139,7 @@ export default function QuoteView() {
         const ctx = pageCanvas.getContext("2d");
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(
-          canvas,
-          0, cursor, canvas.width, sliceHeight,
-          0, 0, canvas.width, sliceHeight,
-        );
+        ctx.drawImage(canvas, 0, cursor, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
         const slice = pageCanvas.toDataURL("image/jpeg", 0.92);
         const sliceMm = sliceHeight / pxPerMm;
         if (cursor > 0) pdf.addPage();
@@ -229,65 +225,56 @@ export default function QuoteView() {
     }
   };
 
-  if (loading) return <div className="p-8 text-slate-400">{t("common.loading")}</div>;
-  if (!quote) return <div className="p-8 text-slate-400">{t("quoteView.notFound")}</div>;
+  if (loading) return <div className="p-8 text-zinc-400">{t("common.loading")}</div>;
+  if (!quote) return <div className="p-8 text-zinc-400">{t("quoteView.notFound")}</div>;
+
+  const subtitle = (
+    <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+      {customer ? <span>{customer.company_name}</span> : null}
+      {quote.creator?.name && (
+        <span className="inline-flex items-center gap-1 text-xs text-zinc-500" data-testid="quote-creator">
+          <span className="inline-block w-1 h-1 rounded-full bg-zinc-300" />
+          {t("quoteView.preparedByLabel")}<b className="text-zinc-700">{quote.creator.name}</b>
+        </span>
+      )}
+    </span>
+  );
 
   return (
-    <div>
-      <button onClick={() => navigate("/teklifler")} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-3" data-testid="back-to-quotes">
-        <ArrowLeft size={14} /> {t("quoteView.backToQuotes")}
-      </button>
-
-      <PageHeader
+    <FullBleed testid="quote-view">
+      <PageBand
+        eyebrow={t("nav.quotes")}
         title={t("quoteView.quoteTitle", { no: quote.quote_no })}
-        subtitle={
-          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
-            {customer ? <span>{customer.company_name}</span> : null}
-            {quote.creator?.name && (
-              <span className="inline-flex items-center gap-1 text-xs text-slate-500" data-testid="quote-creator">
-                <span className="inline-block w-1 h-1 rounded-full bg-slate-300" />
-                {t("quoteView.preparedByLabel")}<b className="text-slate-700">{quote.creator.name}</b>
-              </span>
-            )}
-          </span>
-        }
+        subtitle={subtitle}
+        back={{ to: "/teklifler", label: t("quoteView.backToQuotes"), testid: "back-to-quotes" }}
       >
         <StatusBadge status={quote.status} />
         <Select value={quote.status} onValueChange={updateStatus}>
-          <SelectTrigger className="w-40 h-9" data-testid="quote-status-change"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-11 border-zinc-200" data-testid="quote-status-change"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {STATUS_KEYS.map((s) => (
-              <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
-            ))}
+            {STATUS_KEYS.map((s) => (<SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>))}
           </SelectContent>
         </Select>
-      </PageHeader>
+      </PageBand>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      {/* Action toolbar */}
+      <div className="flex flex-wrap gap-2 px-4 sm:px-6 lg:px-8 py-4 border-b border-zinc-200 bg-white">
         <Link to={`/teklifler/${id}/duzenle`}>
-          <Button variant="outline" data-testid="edit-quote-btn"><Pencil size={14} className="mr-2" /> {t("common.edit")}</Button>
+          <Button variant="outline" data-testid="edit-quote-btn"><Pencil size={14} strokeWidth={1.5} className="mr-2" /> {t("common.edit")}</Button>
         </Link>
-        <Button onClick={downloadPdf} disabled={generating} className="bg-brand hover:bg-brand-hover" data-testid="download-pdf-btn">
-          {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Download size={14} className="mr-2" />}
+        <Button onClick={downloadPdf} disabled={generating} className="bg-brand hover:bg-brand-hover text-white" data-testid="download-pdf-btn">
+          {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Download size={14} strokeWidth={1.5} className="mr-2" />}
           {t("quoteView.downloadPdf")}
         </Button>
-        <Button variant="outline" onClick={() => window.print()} data-testid="print-btn"><Printer size={14} className="mr-2" /> {t("quoteView.print")}</Button>
-
-        {/* Sign toggle */}
-        <Button
-          variant="outline"
-          onClick={() => setSigned((s) => !s)}
-          className={signed ? "bg-brand/10 border-brand text-brand hover:bg-brand/20 hover:text-brand" : ""}
-          data-testid="sign-toggle-btn"
-        >
-          <PenTool size={14} className="mr-2" />
+        <Button variant="outline" onClick={() => window.print()} data-testid="print-btn"><Printer size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.print")}</Button>
+        <Button variant="outline" onClick={() => setSigned((s) => !s)} className={signed ? "bg-brand/10 border-brand text-brand hover:bg-brand/20 hover:text-brand" : ""} data-testid="sign-toggle-btn">
+          <PenTool size={14} strokeWidth={1.5} className="mr-2" />
           {signed ? t("quoteView.unsign") : t("quoteView.sign")}
         </Button>
 
-        {/* Email */}
         <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" data-testid="email-btn"><Mail size={14} className="mr-2" /> {t("quoteView.emailSend")}</Button>
+            <Button variant="outline" data-testid="email-btn"><Mail size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.emailSend")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle className="font-heading">{t("quoteView.emailDialogTitle")}</DialogTitle></DialogHeader>
@@ -295,11 +282,11 @@ export default function QuoteView() {
               <div><Label>{t("quoteView.recipientEmail")}</Label><Input type="email" required value={emailTo} onChange={(e) => setEmailTo(e.target.value)} data-testid="email-to-input" /></div>
               <div><Label>{t("quoteView.subject")}</Label><Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} /></div>
               <div><Label>{t("quoteView.message")}</Label><Textarea rows={6} value={emailMessage} onChange={(e) => setEmailMessage(e.target.value)} /></div>
-              <div className="text-xs text-slate-500">{t("quoteView.pdfAutoAttach")}</div>
+              <div className="text-xs text-zinc-500">{t("quoteView.pdfAutoAttach")}</div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEmailOpen(false)}>{t("common.cancel")}</Button>
-                <Button type="submit" disabled={sending} className="bg-brand hover:bg-brand-hover" data-testid="send-email-submit">
-                  {sending ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Send size={14} className="mr-2" />}
+                <Button type="submit" disabled={sending} className="bg-brand hover:bg-brand-hover text-white" data-testid="send-email-submit">
+                  {sending ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Send size={14} strokeWidth={1.5} className="mr-2" />}
                   {t("quoteView.send")}
                 </Button>
               </DialogFooter>
@@ -307,11 +294,10 @@ export default function QuoteView() {
           </DialogContent>
         </Dialog>
 
-        {/* WhatsApp */}
         <Dialog open={waOpen} onOpenChange={setWaOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" data-testid="whatsapp-btn">
-              <MessageCircle size={14} className="mr-2" /> {t("quoteView.whatsappSend")}
+              <MessageCircle size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.whatsappSend")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
@@ -319,42 +305,44 @@ export default function QuoteView() {
             <div className="space-y-3">
               <div><Label>{t("quoteView.numberLabel")}</Label><Input value={waNumber} onChange={(e) => setWaNumber(e.target.value)} placeholder="+905xxxxxxxxx" data-testid="wa-number-input" /></div>
               <div><Label>{t("quoteView.message")}</Label><Textarea rows={4} value={waMessage} onChange={(e) => setWaMessage(e.target.value)} /></div>
-              <p className="text-xs text-slate-500">{t("quoteView.whatsappHint")}</p>
+              <p className="text-xs text-zinc-500">{t("quoteView.whatsappHint")}</p>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setWaOpen(false)}>{t("common.cancel")}</Button>
-                <Button onClick={openWhatsApp} className="bg-green-600 hover:bg-green-700" data-testid="wa-send-btn">
-                  <MessageCircle size={14} className="mr-2" /> {t("quoteView.openAndSend")}
+                <Button onClick={openWhatsApp} className="bg-green-600 hover:bg-green-700 text-white" data-testid="wa-send-btn">
+                  <MessageCircle size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.openAndSend")}
                 </Button>
               </DialogFooter>
             </div>
           </DialogContent>
         </Dialog>
 
-        <Button variant="outline" onClick={revise} data-testid="revise-btn"><GitBranch size={14} className="mr-2" /> {t("quoteView.newRevision")}</Button>
-        <Button variant="ghost" onClick={remove} className="text-red-600 hover:text-red-700 hover:bg-red-50" data-testid="delete-quote-btn"><Trash2 size={14} className="mr-2" /> {t("common.delete")}</Button>
+        <Button variant="outline" onClick={revise} data-testid="revise-btn"><GitBranch size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.newRevision")}</Button>
+        <Button variant="ghost" onClick={remove} className="text-red-600 hover:text-red-700 hover:bg-red-50" data-testid="delete-quote-btn"><Trash2 size={14} strokeWidth={1.5} className="mr-2" /> {t("common.delete")}</Button>
       </div>
 
-      {quote.revisions && quote.revisions.length > 1 && (
-        <div className="mb-4 bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{t("quoteView.revisions")}</div>
-          <div className="flex flex-wrap gap-2">
-            {quote.revisions.map((r) => (
-              <Link key={r.id} to={`/teklifler/${r.id}`} className={`px-3 py-1 rounded-full text-xs font-medium border ${r.id === id ? "bg-brand text-white border-brand" : "bg-white text-slate-700 border-slate-200 hover:border-brand/40"}`}>
-                {r.quote_no} <span className="opacity-60 ml-1">R{r.revision_number}</span>
-              </Link>
-            ))}
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
+        {quote.revisions && quote.revisions.length > 1 && (
+          <div className="mb-4 bg-white border border-zinc-200 p-4">
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">{t("quoteView.revisions")}</div>
+            <div className="flex flex-wrap gap-2">
+              {quote.revisions.map((r) => (
+                <Link key={r.id} to={`/teklifler/${r.id}`} className={`px-3 py-1 rounded-md text-xs font-medium border ${r.id === id ? "bg-brand text-white border-brand" : "bg-white text-zinc-700 border-zinc-200 hover:border-brand/40"}`}>
+                  {r.quote_no} <span className="opacity-60 ml-1">R{r.revision_number}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* PDF preview */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div ref={pdfRef} className="flex justify-center p-2 sm:p-4 overflow-auto" style={{ background: "#e2e8f0" }}>
-          <div style={{ minWidth: "210mm" }}>
-            <QuotePDFTemplate quote={quote} customer={customer} company={company} signed={signed} />
+        {/* PDF preview */}
+        <div className="bg-white border border-zinc-200 overflow-hidden">
+          <div ref={pdfRef} className="flex justify-center p-2 sm:p-4 overflow-auto" style={{ background: "#e4e4e7" }}>
+            <div style={{ minWidth: "210mm" }}>
+              <QuotePDFTemplate quote={quote} customer={customer} company={company} signed={signed} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </FullBleed>
   );
 }
