@@ -330,8 +330,8 @@ export default function QuoteView() {
             </div>
           )}
 
-          {/* PDF preview — paper on a desk */}
-          <div ref={pdfRef} className="overflow-auto p-3 sm:p-6 rounded-lg" style={{ background: "#27272a" }}>
+          {/* PDF preview — paper on a light desk */}
+          <div ref={pdfRef} className="overflow-auto p-3 sm:p-6 rounded-lg border border-zinc-200" style={{ background: "#f4f4f5" }}>
             <div className="mx-auto shadow-2xl" style={{ width: "210mm", minWidth: "210mm" }}>
               <QuotePDFTemplate quote={quote} customer={customer} company={company} />
             </div>

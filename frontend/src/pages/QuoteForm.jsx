@@ -340,24 +340,24 @@ export default function QuoteForm() {
           </section>
 
           {/* Visual total */}
-          <section className="bg-zinc-900 text-white lg:sticky lg:top-4" data-testid="quote-totals">
+          <section className="bg-white border border-zinc-200 lg:sticky lg:top-4" data-testid="quote-totals">
+            <div className="flex items-center justify-between px-5 h-14 border-b border-zinc-200">
+              <span className="text-xs uppercase tracking-wider text-zinc-500 font-semibold">{t("quoteForm.items")}</span>
+              <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700 font-semibold tabular-nums text-sm">{items.length}</span>
+            </div>
             <div className="p-5">
-              <div className="flex items-center justify-between text-xs uppercase tracking-wider text-zinc-400">
-                <span>{t("quoteForm.items")}</span>
-                <span className="px-2 py-0.5 rounded-full bg-white/10 text-white font-semibold tabular-nums">{items.length}</span>
-              </div>
-              <div className="mt-4 space-y-1.5 text-sm">
-                <div className="flex justify-between text-zinc-300"><span>{t("quoteForm.subtotal")}</span><span className="tabular-nums">{formatMoney(totals.subtotal, currency)}</span></div>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between text-zinc-600"><span>{t("quoteForm.subtotal")}</span><span className="tabular-nums">{formatMoney(totals.subtotal, currency)}</span></div>
                 {Number(vatRate) > 0 && (
-                  <div className="flex justify-between text-zinc-300"><span>{t("quoteForm.vatLine")} (%{vatRate})</span><span className="tabular-nums">+ {formatMoney(totals.vatAmount, currency)}</span></div>
+                  <div className="flex justify-between text-zinc-600"><span>{t("quoteForm.vatLine")} (%{vatRate})</span><span className="tabular-nums">+ {formatMoney(totals.vatAmount, currency)}</span></div>
                 )}
                 {Number(discountRate) > 0 && (
-                  <div className="flex justify-between text-red-300"><span>{t("quoteForm.discount")} (%{discountRate})</span><span className="tabular-nums">- {formatMoney(totals.discAmount, currency)}</span></div>
+                  <div className="flex justify-between text-red-600"><span>{t("quoteForm.discount")} (%{discountRate})</span><span className="tabular-nums">- {formatMoney(totals.discAmount, currency)}</span></div>
                 )}
               </div>
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <div className="text-[10px] uppercase tracking-wider text-zinc-400">{t("quoteForm.grandTotal")} · {t("quoteForm.vatIncluded")}</div>
-                <div className="font-heading text-3xl font-bold text-brand tabular-nums mt-1">{formatMoney(totals.grand, currency)}</div>
+              <div className="mt-4 pt-4 border-t border-zinc-100 flex items-end justify-between">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-500 leading-tight">{t("quoteForm.grandTotal")}<br />{t("quoteForm.vatIncluded")}</div>
+                <div className="font-heading text-3xl font-bold text-brand tabular-nums">{formatMoney(totals.grand, currency)}</div>
               </div>
             </div>
           </section>
