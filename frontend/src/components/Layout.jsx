@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "./ui/sheet";
 import { Menu } from "lucide-react";
 import { Toaster } from "sonner";
 import { useT } from "../i18n/LanguageContext";
@@ -30,6 +30,8 @@ export default function Layout({ children }) {
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-72 max-w-[85vw]">
+              <SheetTitle className="sr-only">{t("nav.openMenu")}</SheetTitle>
+              <SheetDescription className="sr-only">{t("brand.name")}</SheetDescription>
               <Sidebar onNavigate={() => setOpen(false)} />
             </SheetContent>
           </Sheet>

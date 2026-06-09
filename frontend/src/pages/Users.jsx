@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from "../components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -137,6 +137,7 @@ export default function Users() {
         <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col" data-testid="user-sheet">
           <SheetHeader className="px-6 py-5 border-b border-zinc-200 text-left">
             <SheetTitle className="font-heading text-xl tracking-tight">{editing ? t("users.editUser") : t("users.newUser")}</SheetTitle>
+            <SheetDescription className="sr-only">{t("users.subtitle")}</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
             <div><Label className="text-xs text-zinc-500">{t("users.fullName")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1" data-testid="user-name-input" /></div>

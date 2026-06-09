@@ -8,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from "../components/ui/sheet";
 import { Plus, Search, Pencil, Trash2, Building2, Phone, MapPin, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -171,6 +171,7 @@ export default function Customers() {
         <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col" data-testid="customer-sheet">
           <SheetHeader className="px-6 py-5 border-b border-zinc-200 text-left">
             <SheetTitle className="font-heading text-xl tracking-tight">{editing ? t("customers.editCustomer") : t("customers.newCustomer")}</SheetTitle>
+            <SheetDescription className="sr-only">{t("customers.subtitle")}</SheetDescription>
           </SheetHeader>
           <form onSubmit={save} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
             <div>

@@ -7,7 +7,7 @@ import StatusBadge from "../components/StatusBadge";
 import QuotePDFTemplate from "../components/QuotePDFTemplate";
 import { Button } from "../components/ui/button";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -272,7 +272,7 @@ export default function QuoteView() {
             <Button variant="outline" data-testid="email-btn"><Mail size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.emailSend")}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle className="font-heading">{t("quoteView.emailDialogTitle")}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-heading">{t("quoteView.emailDialogTitle")}</DialogTitle><DialogDescription className="sr-only">{t("quoteView.pdfAutoAttach")}</DialogDescription></DialogHeader>
             <form onSubmit={sendEmail} className="space-y-3">
               <div><Label>{t("quoteView.recipientEmail")}</Label><Input type="email" required value={emailTo} onChange={(e) => setEmailTo(e.target.value)} data-testid="email-to-input" /></div>
               <div><Label>{t("quoteView.subject")}</Label><Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} /></div>
@@ -296,7 +296,7 @@ export default function QuoteView() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle className="font-heading">{t("quoteView.whatsappDialogTitle")}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-heading">{t("quoteView.whatsappDialogTitle")}</DialogTitle><DialogDescription className="sr-only">{t("quoteView.whatsappHint")}</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <div><Label>{t("quoteView.numberLabel")}</Label><Input value={waNumber} onChange={(e) => setWaNumber(e.target.value)} placeholder="+905xxxxxxxxx" data-testid="wa-number-input" /></div>
               <div><Label>{t("quoteView.message")}</Label><Textarea rows={4} value={waMessage} onChange={(e) => setWaMessage(e.target.value)} /></div>
