@@ -107,7 +107,7 @@ def build_quotes_router(db):
                     ]
                 },
                 {"_id": 0, "id": 1},
-            ).to_list(1000)
+            ).limit(1000).to_list(1000)
             cust_ids = [c["id"] for c in matching_customers]
             filter_q["$or"] = [
                 {"quote_no": {"$regex": search, "$options": "i"}},

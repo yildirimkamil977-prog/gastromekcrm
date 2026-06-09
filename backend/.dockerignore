@@ -5,6 +5,5 @@ __pycache__
 venv
 tests
 .pytest_cache
-.env
 *.log
 .DS_Store

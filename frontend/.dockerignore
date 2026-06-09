@@ -1,6 +1,5 @@
 node_modules
 build
 .git
-.env
 *.log
 .DS_Store

@@ -90,7 +90,7 @@ def build_customers_router(db):
 
     @router.get("/{customer_id}/quotes")
     async def customer_quotes(customer_id: str, user=Depends(current_user)):
-        items = await db.quotes.find({"customer_id": customer_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+        items = await db.quotes.find({"customer_id": customer_id}, {"_id": 0}).sort("created_at", -1).limit(1000).to_list(1000)
         creator_ids = list({q.get("created_by") for q in items if q.get("created_by")})
         if creator_ids:
             creator_map = {
