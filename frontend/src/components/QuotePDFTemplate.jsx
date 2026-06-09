@@ -140,14 +140,14 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
                   <div style={{ fontWeight: 600 }}>{it.title}</div>
                   {it.description && <div style={{ color: "#475569", marginTop: 2 }}>{it.description}</div>}
                   {Array.isArray(it.features) && it.features.filter((f) => (f || "").trim()).length > 0 && (
-                    <ul style={{ margin: "4px 0 0", paddingLeft: 0, listStyle: "none" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "1px 12px", marginTop: 4 }}>
                       {it.features.filter((f) => (f || "").trim()).map((f, fi) => (
-                        <li key={fi} style={{ fontSize: 9, color: "#475569", lineHeight: 1.5, display: "flex", gap: 6 }}>
+                        <span key={fi} style={{ fontSize: 9, color: "#475569", lineHeight: 1.45, display: "inline-flex", gap: 4, alignItems: "baseline", whiteSpace: "nowrap" }}>
                           <span style={{ color: "#70c800", fontWeight: 700 }}>•</span>
                           <span>{f}</span>
-                        </li>
+                        </span>
                       ))}
-                    </ul>
+                    </div>
                   )}
                 </td>
                 <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{Number(it.quantity) || 0}</td>
