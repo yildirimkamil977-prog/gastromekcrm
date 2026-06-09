@@ -1,3 +1,11 @@
+## Round 6 — VAT (KDV/MwSt.) + quote/PDF polish (2026-06-09)
+- QuoteForm: new **MwSt./KDV (%)** field ABOVE Rabatt (default 19), live calc subtotal→+VAT→withVat→−discount→grand; payload sends `vat_rate`. Dark totals box shows VAT line.
+- Per-item **features** redesigned from stacked inputs to **compact wrapping chips** + inline add input (Enter to add, × to remove). 10 chips = ~2 rows (no vertical stretch).
+- **Signature feature removed**: Quote View "Signieren/İmzala" button, Settings authorized-person field, and PDF handwritten signature block all deleted. (Email HTML signature kept — unrelated.)
+- **PDF**: minimized header (padding 12mm top, logo 42px, heading 24px), added VAT row in totals, fixed green grand-total box padding (12×14, rounded, 8px spacer) so text no longer touches the box.
+- QuoteView sidebar shows VAT line. Backend `compute_totals` (already supported vat_rate) verified consistent across POST/PUT.
+- Verified 100% (iteration_6): backend 26/26 pytest, frontend 10/10, DE/TR both clean, zero bugs.
+
 ## Blueprint redesign (all pages) — 2026-06-08
 - New "Command Center / Blueprint Grid" design system: cardless, full-bleed bands, sharp 1px `border-zinc-200`, ledger tables (sticky headers, hover rows, action icons on hover), brand green #70c800 accents, Outfit headings, lucide icons strokeWidth 1.5.
 - Shared components: `src/components/Blueprint.jsx` (`PageBand`, `FullBleed`, `Panel`). Old `PageHeader` no longer used.
