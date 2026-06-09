@@ -48,7 +48,7 @@ export default function QuoteForm() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerId, setCustomerId] = useState(searchParams.get("customer") || "");
   const [customerQuery, setCustomerQuery] = useState("");
-  const [currency, setCurrency] = useState("TRY");
+  const [currency, setCurrency] = useState("EUR");
   const [vatRate, setVatRate] = useState(19);
   const [discountRate, setDiscountRate] = useState(0);
   const [validUntil, setValidUntil] = useState(plusDaysISO(30));
