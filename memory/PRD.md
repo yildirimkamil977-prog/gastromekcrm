@@ -1,3 +1,9 @@
+## Blueprint redesign (all pages) — 2026-06-08
+- New "Command Center / Blueprint Grid" design system: cardless, full-bleed bands, sharp 1px `border-zinc-200`, ledger tables (sticky headers, hover rows, action icons on hover), brand green #70c800 accents, Outfit headings, lucide icons strokeWidth 1.5.
+- Shared components: `src/components/Blueprint.jsx` (`PageBand`, `FullBleed`, `Panel`). Old `PageHeader` no longer used.
+- Redesigned: Dashboard + Customers (iteration_3) and Quotes, Products, Users, CustomerDetail, QuoteForm, QuoteView, Settings (iteration_4). Customer & User create/edit forms now use a right-side `Sheet` (not modal). Settings uses a vertical tab rail.
+- Verified 100% (iteration_4): all CRUD, PDF download, email/WhatsApp dialogs, settings tabs+save, DE/TR switching, no raw keys, no console errors.
+
 # Gastromek CRM - Product Requirements Document
 
 > Rebranded from **ArıCRM** to **Gastromek CRM** (2026-06-08). Corporate color updated to **logo green #70c800** (was #0073c4) + white. Logo: Gastromek GmbH logo used in sidebar, mobile header, and login.
