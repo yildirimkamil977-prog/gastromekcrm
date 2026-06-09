@@ -185,7 +185,7 @@ export default function Customers() {
             <div><Label className="text-xs text-zinc-500">{t("customers.contactPerson")}</Label><Input value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} className="mt-1" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs text-zinc-500">{t("customers.phone")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="mt-1" /></div>
-              <div><Label className="text-xs text-zinc-500">{t("customers.whatsapp")}</Label><Input placeholder="+905xxxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="mt-1" /></div>
+              <div><Label className="text-xs text-zinc-500">{t("customers.whatsapp")}</Label><Input placeholder="+49 151 xxxxxxxx" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="mt-1" /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs text-zinc-500">{t("customers.email")}</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="mt-1" /></div>

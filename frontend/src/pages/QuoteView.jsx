@@ -298,7 +298,7 @@ export default function QuoteView() {
           <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle className="font-heading">{t("quoteView.whatsappDialogTitle")}</DialogTitle><DialogDescription className="sr-only">{t("quoteView.whatsappHint")}</DialogDescription></DialogHeader>
             <div className="space-y-3">
-              <div><Label>{t("quoteView.numberLabel")}</Label><Input value={waNumber} onChange={(e) => setWaNumber(e.target.value)} placeholder="+905xxxxxxxxx" data-testid="wa-number-input" /></div>
+              <div><Label>{t("quoteView.numberLabel")}</Label><Input value={waNumber} onChange={(e) => setWaNumber(e.target.value)} placeholder="+49 151 xxxxxxxx" data-testid="wa-number-input" /></div>
               <div><Label>{t("quoteView.message")}</Label><Textarea rows={4} value={waMessage} onChange={(e) => setWaMessage(e.target.value)} /></div>
               <p className="text-xs text-zinc-500">{t("quoteView.whatsappHint")}</p>
               <DialogFooter>
