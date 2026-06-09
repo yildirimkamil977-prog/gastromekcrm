@@ -4,6 +4,15 @@
 - Redesigned: Dashboard + Customers (iteration_3) and Quotes, Products, Users, CustomerDetail, QuoteForm, QuoteView, Settings (iteration_4). Customer & User create/edit forms now use a right-side `Sheet` (not modal). Settings uses a vertical tab rail.
 - Verified 100% (iteration_4): all CRUD, PDF download, email/WhatsApp dialogs, settings tabs+save, DE/TR switching, no raw keys, no console errors.
 
+## Round 5 — distinct redesigns + features + GM prefix (2026-06-08)
+- Quotes: clickable status-summary chip strip + document-style rows with status accent stripe & green mono quote-no chip.
+- Customers: contact-style list (big avatars, two-line rows, hover accent, count badge). CustomerDetail: profile hero + clickable contact chips (tel/mailto/wa) + status-striped quotes.
+- QuoteForm: numbered step sections (1/2/3) + dark sticky totals box. QuoteView: document workspace (PDF on dark canvas + meta sidebar).
+- Optional per-item FEATURES/specs: `QuoteItem.features` (backend) + add/remove editor in QuoteForm ItemRow + green bullets in PDF (empty lines ignored).
+- Quote code prefix changed AR- → **GM-** (`generate_quote_no`). Verified GM-202606-0001.
+- Settings/company defaults + preview DB set to Gastromek GmbH (Hörderstr. 288, 58454 Witten · +49 163 9830039 · info@gastromek.de · logo).
+- Verified 100% (iteration_5), zero bugs.
+
 # Gastromek CRM - Product Requirements Document
 
 > Rebranded from **ArıCRM** to **Gastromek CRM** (2026-06-08). Corporate color updated to **logo green #70c800** (was #0073c4) + white. Logo: Gastromek GmbH logo used in sidebar, mobile header, and login.
