@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Save, Loader2, Upload, Building2, Landmark, Share2, Mail, FileSignature } from "lucide-react";
+import { Save, Loader2, Upload, Building2, Landmark, Share2, Mail, FileSignature, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 function ImageUploader({ onUploaded, label, testId }) {
@@ -60,6 +60,11 @@ export default function Settings() {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  const toggleAccRole = (role) => {
+    const cur = form.accounting_visible_roles || [];
+    set("accounting_visible_roles", cur.includes(role) ? cur.filter((r) => r !== role) : [...cur, role]);
+  };
+
   const save = async () => {
     setSaving(true);
     try {
@@ -91,6 +96,7 @@ export default function Settings() {
             <TabsTrigger value="social" className={TAB_ITEM} data-testid="tab-social"><Share2 size={15} strokeWidth={1.5} /> {t("settings.tabSocial")}</TabsTrigger>
             <TabsTrigger value="email" className={TAB_ITEM} data-testid="tab-email"><Mail size={15} strokeWidth={1.5} /> {t("settings.tabEmail")}</TabsTrigger>
             <TabsTrigger value="quote" className={TAB_ITEM} data-testid="tab-quote"><FileSignature size={15} strokeWidth={1.5} /> {t("settings.tabQuote")}</TabsTrigger>
+            <TabsTrigger value="access" className={TAB_ITEM} data-testid="tab-access"><Lock size={15} strokeWidth={1.5} /> {t("settings.tabAccess")}</TabsTrigger>
           </TabsList>
 
           <div className="min-w-0">
@@ -231,6 +237,31 @@ export default function Settings() {
               <div className={`${PANEL} grid grid-cols-1 md:grid-cols-2 gap-4`}>
                 <div><Label>{t("settings.defaultValidity")}</Label><Input type="number" value={form.default_validity_days} onChange={(e) => set("default_validity_days", Number(e.target.value) || 30)} /></div>
                 <div className="md:col-span-2"><Label>{t("settings.defaultQuoteNotes")}</Label><Textarea rows={4} value={form.default_quote_notes} onChange={(e) => set("default_quote_notes", e.target.value)} placeholder={t("settings.defaultQuoteNotesPlaceholder")} /></div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="access" className="mt-0">
+              <div className={PANEL}>
+                <h3 className="font-heading text-lg font-semibold text-zinc-900">{t("settings.accessTitle")}</h3>
+                <p className="text-sm text-zinc-500 mt-1 mb-5">{t("settings.accessIntro")}</p>
+                <div className="space-y-2.5 max-w-md">
+                  <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-1">{t("settings.accountingAccessLabel")}</div>
+                  <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3 bg-zinc-50/60">
+                    <span className="text-sm font-medium text-zinc-700">{t("settings.roleAdminLabel")}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-zinc-400">{t("settings.alwaysOn")}</span>
+                      <Switch checked disabled />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
+                    <span className="text-sm font-medium text-zinc-700">{t("settings.roleSalesLabel")}</span>
+                    <Switch checked={(form.accounting_visible_roles || []).includes("sales")} onCheckedChange={() => toggleAccRole("sales")} data-testid="access-sales-switch" />
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
+                    <span className="text-sm font-medium text-zinc-700">{t("settings.roleAccountingLabel")}</span>
+                    <Switch checked={(form.accounting_visible_roles || []).includes("muhasebe")} onCheckedChange={() => toggleAccRole("muhasebe")} data-testid="access-muhasebe-switch" />
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </div>

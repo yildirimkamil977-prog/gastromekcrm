@@ -2,16 +2,22 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, formatDate, formatMoney } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 import StatusBadge, { STATUS_MAP } from "../components/StatusBadge";
 import { FileText, Users2, Package, Plus, ArrowUpRight, ChevronRight } from "lucide-react";
 import { Button } from "../components/ui/button";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
 const STATUS_ORDER = ["taslak", "gonderildi", "kabul", "red", "suresi_doldu"];
 
 export default function Dashboard() {
   const { t } = useT();
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [finance, setFinance] = useState(null);
 
   useEffect(() => {
     api
@@ -20,6 +26,26 @@ export default function Dashboard() {
       .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.get("/settings").then((r) => {
+      const roles = r.data?.accounting_visible_roles || [];
+      const canSee = user?.role === "admin" || roles.includes(user?.role);
+      if (!canSee) return;
+      const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 5);
+      const from = d.toISOString().slice(0, 10);
+      return api.get("/accounting/stats", { params: { date_from: from } })
+        .then((s) => { if (active) setFinance(s.data); });
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [user]);
+
+  const financeChart = (finance?.monthly || []).map((m) => ({
+    name: `${m.month.slice(5)}/${m.month.slice(2, 4)}`,
+    [t("accounting.income")]: m.income,
+    [t("accounting.expense")]: m.expense,
+  }));
 
   const navBlocks = [
     { to: "/musteriler", icon: Users2, label: t("dashboard.customer"), value: stats?.customer_count },
@@ -143,6 +169,30 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Finance chart (only for roles allowed to see accounting) */}
+      {finance && financeChart.length > 0 && (
+        <div className="bg-white border-t border-zinc-200" data-testid="dashboard-finance-panel">
+          <div className="flex items-center px-6 h-14 border-b border-zinc-200">
+            <h3 className="font-heading font-semibold text-zinc-900 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand" /> {t("dashboard.financeTitle")}
+            </h3>
+          </div>
+          <div className="p-4 sm:p-6" style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={financeChart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f3" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={{ stroke: "#e4e4e7" }} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} width={70} tickFormatter={(v) => formatMoney(v, "EUR")} />
+                <Tooltip formatter={(v) => formatMoney(v, "EUR")} contentStyle={{ fontSize: 13, borderRadius: 8, border: "1px solid #e4e4e7" }} />
+                <Legend wrapperStyle={{ fontSize: 13 }} />
+                <Bar dataKey={t("accounting.income")} fill="#70C800" radius={[4, 4, 0, 0]} maxBarSize={56} />
+                <Bar dataKey={t("accounting.expense")} fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={56} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

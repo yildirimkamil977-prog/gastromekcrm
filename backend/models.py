@@ -181,6 +181,8 @@ class CompanySettings(BaseModel):
     default_vat_rate: float = 0.0
     default_validity_days: int = 30
     default_quote_notes: str = ""
+    # Accounting page access — roles allowed to view it (admin always can)
+    accounting_visible_roles: List[str] = ["admin", "sales", "muhasebe"]
 
 
 # ===== Auth =====
@@ -195,3 +197,31 @@ class SendQuoteEmailRequest(BaseModel):
     subject: Optional[str] = None
     message: Optional[str] = None
     pdf_base64: str  # base64-encoded PDF generated on client
+
+
+# ===== Accounting / Transactions =====
+INCOME_CATEGORIES = ["proje", "magaza_satisi", "diger"]
+EXPENSE_CATEGORIES = [
+    "kira", "personel_maasi", "muhasebe", "konaklama", "ulasim",
+    "fatura", "yazilim", "yemek", "yakit", "diger",
+]
+
+
+class TransactionBase(BaseModel):
+    kind: str  # "income" | "expense"
+    category: str
+    amount: float  # in EUR
+    description: Optional[str] = ""
+    date: str  # ISO date YYYY-MM-DD
+
+
+class TransactionCreate(TransactionBase):
+    pass
+
+
+class TransactionUpdate(BaseModel):
+    kind: Optional[str] = None
+    category: Optional[str] = None
+    amount: Optional[float] = None
+    description: Optional[str] = None
+    date: Optional[str] = None

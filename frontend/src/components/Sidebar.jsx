@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users2, FileText, Package, Settings as SettingsIcon,
-  UserCog, LogOut,
+  UserCog, LogOut, Calculator,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 
@@ -27,6 +28,21 @@ export default function Sidebar({ onNavigate }) {
   const { t } = useT();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    api.get("/settings").then((r) => setSettings(r.data)).catch(() => {});
+  }, []);
+
+  const canSeeAccounting = isAdmin || (settings?.accounting_visible_roles || []).includes(user?.role);
+  const links = canSeeAccounting
+    ? [...mainLinks, { to: "/muhasebe", key: "accounting", icon: Calculator, testid: "nav-accounting" }]
+    : mainLinks;
+  const roleLabel = user?.role === "admin"
+    ? t("nav.roleAdmin")
+    : user?.role === "muhasebe"
+      ? t("nav.roleAccounting")
+      : t("nav.roleSales");
 
   const handleLogout = async () => {
     await logout();
@@ -52,7 +68,7 @@ export default function Sidebar({ onNavigate }) {
 
       <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
         <div className="px-3 pb-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-400">{t("nav.sectionMain")}</div>
-        {mainLinks.map((l) => (
+        {links.map((l) => (
           <NavLink
             key={l.to}
             to={l.to}
@@ -94,7 +110,7 @@ export default function Sidebar({ onNavigate }) {
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-slate-900 truncate">{user?.name}</div>
             <div className="text-xs text-slate-500">
-              {user?.role === "admin" ? t("nav.roleAdmin") : t("nav.roleSales")}
+              {roleLabel}
             </div>
           </div>
         </div>

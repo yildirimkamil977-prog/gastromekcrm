@@ -16,6 +16,7 @@ import QuoteForm from "./pages/QuoteForm";
 import QuoteView from "./pages/QuoteView";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
+import Muhasebe from "./pages/Muhasebe";
 
 function useRemoveEmergentBadge() {
   useEffect(() => {
@@ -56,6 +57,7 @@ function App() {
                 <Route path="/teklifler/yeni" element={<Protected><QuoteForm /></Protected>} />
                 <Route path="/teklifler/:id" element={<Protected><QuoteView /></Protected>} />
                 <Route path="/teklifler/:id/duzenle" element={<Protected><QuoteForm /></Protected>} />
+                <Route path="/muhasebe" element={<Protected><Muhasebe /></Protected>} />
                 <Route path="/ayarlar" element={<Protected adminOnly><Settings /></Protected>} />
                 <Route path="/kullanicilar" element={<Protected adminOnly><Users /></Protected>} />
               </Routes>

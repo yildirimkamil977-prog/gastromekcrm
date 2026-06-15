@@ -25,7 +25,7 @@ def build_users_router(db):
         exists = await db.users.find_one({"email": email})
         if exists:
             raise HTTPException(status_code=400, detail="Bu e-posta ile kullanıcı zaten var")
-        if body.role not in ("admin", "sales"):
+        if body.role not in ("admin", "sales", "muhasebe"):
             raise HTTPException(status_code=400, detail="Geçersiz rol")
         doc = {
             "id": uid(),
@@ -49,7 +49,7 @@ def build_users_router(db):
         if body.name is not None:
             update["name"] = body.name
         if body.role is not None:
-            if body.role not in ("admin", "sales"):
+            if body.role not in ("admin", "sales", "muhasebe"):
                 raise HTTPException(status_code=400, detail="Geçersiz rol")
             update["role"] = body.role
         if body.password:

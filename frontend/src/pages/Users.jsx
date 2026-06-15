@@ -11,7 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
-import { Plus, Pencil, Trash2, ShieldCheck, User } from "lucide-react";
+import { Plus, Pencil, Trash2, ShieldCheck, User, Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 
@@ -112,9 +112,9 @@ export default function Users() {
                   </td>
                   <td className="px-4 py-3 text-zinc-600 hidden sm:table-cell">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold border uppercase tracking-wider ${u.role === "admin" ? "bg-brand-light text-brand border-brand/40" : "bg-zinc-100 text-zinc-600 border-zinc-200"}`}>
-                      {u.role === "admin" ? <ShieldCheck size={12} strokeWidth={1.5} /> : <User size={12} strokeWidth={1.5} />}
-                      {u.role === "admin" ? t("nav.roleAdmin") : t("nav.roleSales")}
+                    <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold border uppercase tracking-wider ${u.role === "admin" ? "bg-brand-light text-brand border-brand/40" : u.role === "muhasebe" ? "bg-indigo-50 text-indigo-600 border-indigo-200" : "bg-zinc-100 text-zinc-600 border-zinc-200"}`}>
+                      {u.role === "admin" ? <ShieldCheck size={12} strokeWidth={1.5} /> : u.role === "muhasebe" ? <Calculator size={12} strokeWidth={1.5} /> : <User size={12} strokeWidth={1.5} />}
+                      {u.role === "admin" ? t("nav.roleAdmin") : u.role === "muhasebe" ? t("nav.roleAccounting") : t("nav.roleSales")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-zinc-400 hidden lg:table-cell">{formatDate(u.created_at)}</td>
@@ -149,6 +149,7 @@ export default function Users() {
                 <SelectContent>
                   <SelectItem value="admin">{t("users.roleAdminOption")}</SelectItem>
                   <SelectItem value="sales">{t("users.roleSales")}</SelectItem>
+                  <SelectItem value="muhasebe">{t("users.roleAccountingOption")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

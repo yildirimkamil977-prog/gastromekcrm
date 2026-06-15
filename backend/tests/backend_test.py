@@ -354,3 +354,208 @@ class TestSettings:
     def test_sales_cannot_update(self, sales_session):
         r = sales_session.put(f"{API}/settings", json={"company_name": "Hack"}, timeout=15)
         assert r.status_code == 403
+
+
+
+# ---------------------------- ACCOUNTING ----------------------------
+@pytest.fixture(scope="session")
+def muhasebe_user(admin_session):
+    """Create a muhasebe role user."""
+    email = f"{TEST_PREFIX}muh_{uuid.uuid4().hex[:6]}@arigastro.com"
+    password = "Muh12345!"
+    r = admin_session.post(f"{API}/users", json={
+        "email": email, "name": "TEST Muhasebe", "role": "muhasebe", "password": password
+    }, timeout=30)
+    assert r.status_code == 200, f"muhasebe user create failed: {r.text}"
+    u = r.json()
+    assert u["role"] == "muhasebe"
+    yield {"id": u["id"], "email": email, "password": password}
+    admin_session.delete(f"{API}/users/{u['id']}", timeout=15)
+
+
+@pytest.fixture(scope="session")
+def muhasebe_session(muhasebe_user):
+    s = requests.Session()
+    r = s.post(f"{API}/auth/login", json={"email": muhasebe_user["email"], "password": muhasebe_user["password"]}, timeout=30)
+    assert r.status_code == 200, r.text
+    return s
+
+
+class TestAccountingCRUD:
+    """Income/expense CRUD + EUR + validation."""
+
+    def test_create_income(self, admin_session):
+        body = {"kind": "income", "category": "proje", "amount": 1234.56, "description": "TEST proje payment", "date": "2026-01-15"}
+        r = admin_session.post(f"{API}/accounting", json=body, timeout=15)
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["kind"] == "income" and d["category"] == "proje"
+        assert d["amount"] == 1234.56
+        assert d["currency"] == "EUR"
+        assert d["description"] == "TEST proje payment"
+        assert "id" in d
+        # GET back via list
+        lr = admin_session.get(f"{API}/accounting", params={"kind": "income", "page_size": 50}, timeout=15)
+        assert lr.status_code == 200
+        ids = [x["id"] for x in lr.json()["items"]]
+        assert d["id"] in ids
+        admin_session.delete(f"{API}/accounting/{d['id']}", timeout=15)
+
+    def test_create_expense(self, admin_session):
+        body = {"kind": "expense", "category": "kira", "amount": 800, "description": "TEST rent", "date": "2026-01-10"}
+        r = admin_session.post(f"{API}/accounting", json=body, timeout=15)
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["currency"] == "EUR" and d["amount"] == 800.0
+        admin_session.delete(f"{API}/accounting/{d['id']}", timeout=15)
+
+    def test_invalid_kind(self, admin_session):
+        r = admin_session.post(f"{API}/accounting", json={"kind": "foo", "category": "proje", "amount": 1, "date": "2026-01-01"}, timeout=15)
+        assert r.status_code == 400
+
+    def test_invalid_category(self, admin_session):
+        # 'kira' is expense; sending as income must 400
+        r = admin_session.post(f"{API}/accounting", json={"kind": "income", "category": "kira", "amount": 1, "date": "2026-01-01"}, timeout=15)
+        assert r.status_code == 400
+
+    def test_update_persists(self, admin_session):
+        c = admin_session.post(f"{API}/accounting", json={"kind": "expense", "category": "yemek", "amount": 50, "description": "TEST lunch", "date": "2026-01-05"}, timeout=15).json()
+        u = admin_session.put(f"{API}/accounting/{c['id']}", json={"amount": 75.5, "description": "TEST dinner"}, timeout=15)
+        assert u.status_code == 200
+        ud = u.json()
+        assert ud["amount"] == 75.5 and ud["description"] == "TEST dinner"
+        assert ud["currency"] == "EUR"
+        admin_session.delete(f"{API}/accounting/{c['id']}", timeout=15)
+
+    def test_delete_returns_404_after(self, admin_session):
+        c = admin_session.post(f"{API}/accounting", json={"kind": "income", "category": "diger", "amount": 10, "date": "2026-01-01"}, timeout=15).json()
+        d = admin_session.delete(f"{API}/accounting/{c['id']}", timeout=15)
+        assert d.status_code == 200
+        # PUT on deleted -> 404
+        r = admin_session.put(f"{API}/accounting/{c['id']}", json={"amount": 1}, timeout=15)
+        assert r.status_code == 404
+
+
+class TestAccountingFiltersStats:
+
+    def test_date_range_filter(self, admin_session):
+        ids = []
+        for d in ["2026-03-01", "2026-03-15", "2026-04-01"]:
+            r = admin_session.post(f"{API}/accounting", json={"kind": "income", "category": "diger", "amount": 100, "description": f"TEST {d}", "date": d}, timeout=15)
+            ids.append(r.json()["id"])
+        try:
+            r = admin_session.get(f"{API}/accounting", params={"date_from": "2026-03-01", "date_to": "2026-03-31", "kind": "income", "page_size": 50}, timeout=15)
+            items = r.json()["items"]
+            dates = {x["date"] for x in items}
+            assert "2026-03-01" in dates and "2026-03-15" in dates
+            assert "2026-04-01" not in dates
+        finally:
+            for i in ids:
+                admin_session.delete(f"{API}/accounting/{i}", timeout=15)
+
+    def test_search_by_description(self, admin_session):
+        token = f"UNIQUEDESC{uuid.uuid4().hex[:6]}"
+        c = admin_session.post(f"{API}/accounting", json={"kind": "expense", "category": "yazilim", "amount": 99, "description": f"TEST {token}", "date": "2026-02-01"}, timeout=15).json()
+        try:
+            r = admin_session.get(f"{API}/accounting", params={"search": token, "page_size": 50}, timeout=15)
+            ids = [x["id"] for x in r.json()["items"]]
+            assert c["id"] in ids
+        finally:
+            admin_session.delete(f"{API}/accounting/{c['id']}", timeout=15)
+
+    def test_search_by_category_code_via_cats(self, admin_session):
+        """Frontend resolves DE/TR category names to codes and sends as 'cats'."""
+        c = admin_session.post(f"{API}/accounting", json={"kind": "expense", "category": "kira", "amount": 700, "description": "TEST rent jan", "date": "2026-02-02"}, timeout=15).json()
+        try:
+            r = admin_session.get(f"{API}/accounting", params={"cats": "kira", "kind": "expense", "page_size": 50}, timeout=15)
+            ids = [x["id"] for x in r.json()["items"]]
+            assert c["id"] in ids
+        finally:
+            admin_session.delete(f"{API}/accounting/{c['id']}", timeout=15)
+
+    def test_pagination(self, admin_session):
+        ids = []
+        for i in range(11):
+            r = admin_session.post(f"{API}/accounting", json={"kind": "income", "category": "magaza_satisi", "amount": 5, "description": f"TEST pg {i}", "date": "2026-05-01"}, timeout=15)
+            ids.append(r.json()["id"])
+        try:
+            r1 = admin_session.get(f"{API}/accounting", params={"kind": "income", "search": "TEST pg", "page": 1, "page_size": 8}, timeout=15).json()
+            r2 = admin_session.get(f"{API}/accounting", params={"kind": "income", "search": "TEST pg", "page": 2, "page_size": 8}, timeout=15).json()
+            assert r1["total"] >= 11
+            assert len(r1["items"]) == 8
+            assert len(r2["items"]) >= 3
+        finally:
+            for i in ids:
+                admin_session.delete(f"{API}/accounting/{i}", timeout=15)
+
+    def test_stats_totals_and_monthly(self, admin_session):
+        ids = []
+        for body in [
+            {"kind": "income", "category": "proje", "amount": 200, "description": "TEST s1", "date": "2026-06-10"},
+            {"kind": "income", "category": "diger", "amount": 50.5, "description": "TEST s2", "date": "2026-06-12"},
+            {"kind": "expense", "category": "kira", "amount": 100, "description": "TEST s3", "date": "2026-06-15"},
+        ]:
+            ids.append(admin_session.post(f"{API}/accounting", json=body, timeout=15).json()["id"])
+        try:
+            r = admin_session.get(f"{API}/accounting/stats", params={"date_from": "2026-06-01", "date_to": "2026-06-30", "search": "TEST s"}, timeout=15)
+            assert r.status_code == 200
+            s = r.json()
+            assert "total_income" in s and "total_expense" in s and "net" in s
+            assert isinstance(s.get("monthly"), list)
+            # Note: stats search uses OR with description; for this dataset all 3 match description prefix
+            assert s["total_income"] >= 250.5 - 0.01
+            assert s["total_expense"] >= 100 - 0.01
+            assert round(s["net"], 2) == round(s["total_income"] - s["total_expense"], 2)
+        finally:
+            for i in ids:
+                admin_session.delete(f"{API}/accounting/{i}", timeout=15)
+
+
+class TestAccountingRBAC:
+
+    def test_muhasebe_role_allowed_in_users(self, admin_session, muhasebe_user):
+        # the fixture already created muhasebe user; verify GET reflects
+        r = admin_session.get(f"{API}/users", timeout=15)
+        assert r.status_code == 200
+        users = r.json()
+        roles = {u["email"].lower(): u["role"] for u in users if isinstance(u, dict)}
+        assert roles.get(muhasebe_user["email"].lower()) == "muhasebe"
+
+    def test_sales_default_can_access(self, sales_session):
+        r = sales_session.get(f"{API}/accounting", timeout=15)
+        assert r.status_code == 200
+
+    def test_muhasebe_can_access(self, muhasebe_session):
+        r = muhasebe_session.get(f"{API}/accounting", timeout=15)
+        assert r.status_code == 200
+
+    def test_sales_blocked_when_disabled_in_settings(self, admin_session, sales_session):
+        # Get current
+        cur = admin_session.get(f"{API}/settings", timeout=15).json()
+        original = cur.get("accounting_visible_roles") or ["admin", "sales", "muhasebe"]
+        try:
+            # Disable sales (keep muhasebe to also verify it still works)
+            new_roles = [r for r in original if r != "sales"]
+            if "admin" not in new_roles:
+                new_roles.append("admin")
+            up = admin_session.put(f"{API}/settings", json={"accounting_visible_roles": new_roles}, timeout=15)
+            assert up.status_code == 200
+            # sales should now 403
+            r = sales_session.get(f"{API}/accounting", timeout=15)
+            assert r.status_code == 403, f"expected 403 got {r.status_code}: {r.text}"
+            # admin always allowed
+            r2 = admin_session.get(f"{API}/accounting", timeout=15)
+            assert r2.status_code == 200
+        finally:
+            admin_session.put(f"{API}/settings", json={"accounting_visible_roles": original}, timeout=15)
+
+    def test_settings_persists_accounting_visible_roles(self, admin_session):
+        cur = admin_session.get(f"{API}/settings", timeout=15).json()
+        original = cur.get("accounting_visible_roles") or ["admin", "sales", "muhasebe"]
+        try:
+            up = admin_session.put(f"{API}/settings", json={"accounting_visible_roles": ["admin", "muhasebe"]}, timeout=15)
+            assert up.status_code == 200
+            again = admin_session.get(f"{API}/settings", timeout=15).json()
+            assert set(again.get("accounting_visible_roles") or []) == {"admin", "muhasebe"}
+        finally:
+            admin_session.put(f"{API}/settings", json={"accounting_visible_roles": original}, timeout=15)
