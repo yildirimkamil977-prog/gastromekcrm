@@ -1,3 +1,13 @@
+## Round 8 — Accounting (Buchhaltung/Muhasebe) module (2026-06-15)
+- New **Accounting page** (`/muhasebe`): income & expense entries in **EUR**, optional description shown only after a category is picked.
+  - Income types: Proje, Mağaza Satışı, Diğer. Expense types: Kira, Personel Maaşı, Muhasebe, Konaklama, Ulaşım, Fatura, Yazılım, Yemek, Yakıt, Diğer.
+  - Search (matches category name + description), date-range filter, kind filter (all/income/expense), per-column **pagination**, side-by-side Einnahmen/Ausgaben columns, summary cards + **recharts** monthly bar chart.
+- New user role **"Muhasebe Birimi" (muhasebe)** — sees everything; accounting access still governed by settings toggle.
+- **Settings > Zugriff/Erişim tab**: `accounting_visible_roles` toggle controls which roles (sales/muhasebe) see the Accounting page; admin always sees it.
+- **Dashboard finance chart** (income vs expense, 6 months) — hidden for roles not allowed to see accounting.
+- Full DE/TR i18n. Backend: `routes/accounting.py` (CRUD + stats + RBAC), `transactions` collection + indexes, role validation extended.
+- Verified 100% (iteration_7): backend 42/42 pytest (16 new), frontend all flows pass, zero bugs. Test data cleaned.
+
 ## Round 6 — VAT (KDV/MwSt.) + quote/PDF polish (2026-06-09)
 - QuoteForm: new **MwSt./KDV (%)** field ABOVE Rabatt (default 19), live calc subtotal→+VAT→withVat→−discount→grand; payload sends `vat_rate`. Dark totals box shows VAT line.
 - Per-item **features** redesigned from stacked inputs to **compact wrapping chips** + inline add input (Enter to add, × to remove). 10 chips = ~2 rows (no vertical stretch).
