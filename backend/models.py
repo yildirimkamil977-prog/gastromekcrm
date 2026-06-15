@@ -213,6 +213,7 @@ class TransactionBase(BaseModel):
     amount: float  # in EUR
     description: Optional[str] = ""
     date: str  # ISO date YYYY-MM-DD
+    owner_id: Optional[str] = None  # person the entry belongs to (defaults to creator)
 
 
 class TransactionCreate(TransactionBase):
@@ -225,3 +226,4 @@ class TransactionUpdate(BaseModel):
     amount: Optional[float] = None
     description: Optional[str] = None
     date: Optional[str] = None
+    owner_id: Optional[str] = None

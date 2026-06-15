@@ -34,10 +34,12 @@ def build_accounting_router(db):
         if user.get("role") not in allowed:
             raise HTTPException(status_code=403, detail="Bu sayfaya erişim yetkiniz yok")
 
-    def _build_filter(kind, search, cats, date_from, date_to):
+    def _build_filter(kind, search, cats, date_from, date_to, owner=""):
         q = {}
         if kind in ("income", "expense"):
             q["kind"] = kind
+        if owner:
+            q["owner_id"] = owner
         if date_from or date_to:
             dr = {}
             if date_from:
@@ -61,13 +63,14 @@ def build_accounting_router(db):
         cats: str = Query(""),
         date_from: str = Query(""),
         date_to: str = Query(""),
+        owner: str = Query(""),
         page: int = Query(1, ge=1),
         page_size: int = Query(10, ge=1, le=200),
         user=Depends(current_user),
     ):
         await ensure_access(user)
         cats_list = [c for c in cats.split(",") if c] if cats else []
-        q = _build_filter(kind, search, cats_list, date_from, date_to)
+        q = _build_filter(kind, search, cats_list, date_from, date_to, owner)
         total = await db.transactions.count_documents(q)
         skip = (page - 1) * page_size
         items = (
@@ -77,17 +80,23 @@ def build_accounting_router(db):
             .limit(page_size)
             .to_list(page_size)
         )
-        creator_ids = list({t.get("created_by") for t in items if t.get("created_by")})
-        cmap = {}
-        if creator_ids:
-            cmap = {
+        uids = set()
+        for t in items:
+            if t.get("created_by"):
+                uids.add(t["created_by"])
+            if t.get("owner_id"):
+                uids.add(t["owner_id"])
+        umap = {}
+        if uids:
+            umap = {
                 u["id"]: u
                 for u in await db.users.find(
-                    {"id": {"$in": creator_ids}}, {"_id": 0, "id": 1, "name": 1}
-                ).to_list(len(creator_ids))
+                    {"id": {"$in": list(uids)}}, {"_id": 0, "id": 1, "name": 1}
+                ).to_list(len(uids))
             }
         for t in items:
-            t["creator"] = cmap.get(t.get("created_by"))
+            t["creator"] = umap.get(t.get("created_by"))
+            t["owner"] = umap.get(t.get("owner_id"))
         return {"items": items, "total": total, "page": page, "page_size": page_size}
 
     @router.get("/stats")
@@ -96,11 +105,12 @@ def build_accounting_router(db):
         cats: str = Query(""),
         date_from: str = Query(""),
         date_to: str = Query(""),
+        owner: str = Query(""),
         user=Depends(current_user),
     ):
         await ensure_access(user)
         cats_list = [c for c in cats.split(",") if c] if cats else []
-        base = _build_filter("", search, cats_list, date_from, date_to)
+        base = _build_filter("", search, cats_list, date_from, date_to, owner)
 
         totals = {"income": 0.0, "expense": 0.0}
         async for r in db.transactions.aggregate(
@@ -141,6 +151,7 @@ def build_accounting_router(db):
         doc["amount"] = round(float(body.amount), 2)
         doc["currency"] = "EUR"
         doc["description"] = (body.description or "").strip()
+        doc["owner_id"] = body.owner_id or user["id"]
         doc["created_by"] = user["id"]
         doc["created_at"] = now
         doc["updated_at"] = now

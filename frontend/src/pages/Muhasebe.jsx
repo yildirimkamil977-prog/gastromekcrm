@@ -16,7 +16,7 @@ import {
 } from "../components/ui/select";
 import {
   Plus, Search, Pencil, Trash2, TrendingUp, TrendingDown, Wallet,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, User,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -47,6 +47,8 @@ export default function Muhasebe() {
   const [debounced, setDebounced] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [person, setPerson] = useState("");
+  const [users, setUsers] = useState([]);
   const [incomePage, setIncomePage] = useState(1);
   const [expensePage, setExpensePage] = useState(1);
   const [income, setIncome] = useState({ items: [], total: 0 });
@@ -56,7 +58,7 @@ export default function Muhasebe() {
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ kind: "income", category: "", amount: "", description: "", date: todayISO() });
+  const [form, setForm] = useState({ kind: "income", category: "", amount: "", description: "", date: todayISO(), owner_id: "" });
 
   const catLabel = useCallback(
     (k, c) => t(`accounting.${k === "income" ? "incomeTypes" : "expenseTypes"}.${c}`),
@@ -79,8 +81,14 @@ export default function Muhasebe() {
     return () => clearTimeout(id);
   }, [search]);
 
+  // load user list (for owner select + person filter) once access granted
+  useEffect(() => {
+    if (!ready) return;
+    api.get("/users").then((r) => setUsers(r.data)).catch(() => {});
+  }, [ready]);
+
   // reset pages on filter change
-  useEffect(() => { setIncomePage(1); setExpensePage(1); }, [debounced, dateFrom, dateTo, kind]);
+  useEffect(() => { setIncomePage(1); setExpensePage(1); }, [debounced, dateFrom, dateTo, kind, person]);
 
   const matchingCats = useMemo(() => {
     if (!debounced) return "";
@@ -94,7 +102,7 @@ export default function Muhasebe() {
   const load = useCallback(async () => {
     if (!ready) return;
     setLoading(true);
-    const common = { search: debounced, cats: matchingCats, date_from: dateFrom, date_to: dateTo };
+    const common = { search: debounced, cats: matchingCats, date_from: dateFrom, date_to: dateTo, owner: person };
     try {
       const reqs = [api.get("/accounting/stats", { params: common })];
       if (kind === "all" || kind === "income")
@@ -111,18 +119,18 @@ export default function Muhasebe() {
     } finally {
       setLoading(false);
     }
-  }, [ready, debounced, matchingCats, dateFrom, dateTo, kind, incomePage, expensePage]);
+  }, [ready, debounced, matchingCats, dateFrom, dateTo, kind, incomePage, expensePage, person]);
 
   useEffect(() => { load(); }, [load]);
 
   const openNew = (k) => {
     setEditing(null);
-    setForm({ kind: k, category: "", amount: "", description: "", date: todayISO() });
+    setForm({ kind: k, category: "", amount: "", description: "", date: todayISO(), owner_id: user?.id || "" });
     setOpen(true);
   };
   const openEdit = (tx) => {
     setEditing(tx);
-    setForm({ kind: tx.kind, category: tx.category, amount: String(tx.amount), description: tx.description || "", date: tx.date });
+    setForm({ kind: tx.kind, category: tx.category, amount: String(tx.amount), description: tx.description || "", date: tx.date, owner_id: tx.owner_id || tx.created_by || "" });
     setOpen(true);
   };
 
@@ -130,7 +138,7 @@ export default function Muhasebe() {
     if (!form.category) { toast.error(t("accounting.categoryRequired")); return; }
     const amt = Number(form.amount);
     if (!amt || amt <= 0) { toast.error(t("accounting.amountRequired")); return; }
-    const payload = { kind: form.kind, category: form.category, amount: amt, description: form.description, date: form.date };
+    const payload = { kind: form.kind, category: form.category, amount: amt, description: form.description, date: form.date, owner_id: form.owner_id || undefined };
     try {
       if (editing) { await api.put(`/accounting/${editing.id}`, payload); toast.success(t("accounting.updated")); }
       else { await api.post("/accounting", payload); toast.success(t("accounting.added")); }
@@ -224,7 +232,7 @@ export default function Muhasebe() {
             <Label className="text-xs text-zinc-500">{t("accounting.dateTo")}</Label>
             <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="mt-1" data-testid="accounting-date-to" />
           </div>
-          <div className="lg:w-48">
+          <div className="lg:w-44">
             <Label className="text-xs text-zinc-500">{t("accounting.kind")}</Label>
             <Select value={kind} onValueChange={setKind}>
               <SelectTrigger className="mt-1" data-testid="accounting-kind-filter"><SelectValue /></SelectTrigger>
@@ -232,6 +240,16 @@ export default function Muhasebe() {
                 <SelectItem value="all">{t("accounting.filterAll")}</SelectItem>
                 <SelectItem value="income">{t("accounting.filterIncome")}</SelectItem>
                 <SelectItem value="expense">{t("accounting.filterExpense")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="lg:w-44">
+            <Label className="text-xs text-zinc-500">{t("accounting.person")}</Label>
+            <Select value={person || "all"} onValueChange={(v) => setPerson(v === "all" ? "" : v)}>
+              <SelectTrigger className="mt-1" data-testid="accounting-person-filter"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("accounting.allPersons")}</SelectItem>
+                {users.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -292,6 +310,15 @@ export default function Muhasebe() {
                 <Input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} className="mt-1" data-testid="tx-date-input" />
               </div>
             </div>
+            <div>
+              <Label className="text-xs text-zinc-500">{t("accounting.belongsTo")}</Label>
+              <Select value={form.owner_id || ""} onValueChange={(v) => setForm((f) => ({ ...f, owner_id: v }))}>
+                <SelectTrigger className="mt-1" data-testid="tx-owner-select"><SelectValue placeholder={t("accounting.selectPerson")} /></SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {/* Description appears once a category is selected */}
             {form.category && (
               <div data-testid="tx-description-block">
@@ -344,6 +371,13 @@ function TxColumn({ title, accent, data, page, setPage, loading, kindKey, catLab
                 <span className="text-xs text-zinc-400 shrink-0">{formatDate(tx.date)}</span>
               </div>
               {tx.description && <div className="text-xs text-zinc-500 truncate mt-0.5">{tx.description}</div>}
+              <div className="text-[11px] text-zinc-400 mt-0.5 flex items-center gap-1 flex-wrap" data-testid={`tx-person-${tx.id}`}>
+                <User size={11} strokeWidth={1.5} className="shrink-0" />
+                <span className="font-medium text-zinc-500">{tx.owner?.name || tx.creator?.name || "-"}</span>
+                {tx.creator && tx.creator.id !== tx.owner_id && (
+                  <span className="text-zinc-400">· {t("accounting.createdBy")}: {tx.creator.name}</span>
+                )}
+              </div>
             </div>
             <div className="font-semibold tabular-nums text-sm shrink-0" style={{ color: accent }}>
               {kindKey === "income" ? "+" : "-"} {formatMoney(tx.amount, "EUR")}
