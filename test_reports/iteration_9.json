@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend-only verification of the Projeler (Projekte) 'Add Project' customer combobox fix. Admin login (admin@arigastro.com / admin123) POST /api/auth/login -> 200 OK, redirected to dashboard. Navigated to /projeler. Clicked new-project-btn -> create sheet opened. Clicked data-testid=project-customer-select trigger -> Popover opened; data-testid=project-customer-search input rendered; on empty query the list showed 3 customer options (data-testid customer-option-*) with names 'Esra Butik', 'Kamil Yıldırım', 'Kamil Züccaciye' — NON-EMPTY, confirming the page_size=1000/422 regression is fixed (frontend now sends page_size=50 with server-side search). Typed 'Kamil' into project-customer-search -> options filtered to exactly 2 ('Kamil Yıldırım', 'Kamil Züccaciye') via server-side ?search=Kamil. Selected 'Kamil Yıldırım' -> combobox trigger label changed from 'Kunde wählen' placeholder to 'Kamil Yıldırım'. Filled project-name-input='TEST_CB_Proje_ZZ', project-amount-input=12345, clicked save-project-btn -> POST /api/projects -> 200 OK. Project appears in projects table with correct customer name. Opened edit-project-<id> for the created row -> the CustomerCombobox trigger pre-shows 'Kamil Yıldırım' (not the 'Kunde wählen' placeholder), confirming displayName prop wiring on edit. Cleanup: deleted the TEST project via delete-project-<id>; 'Projekt gelöscht' toast confirmed removal. No console errors; no Cloudflare bot-block encountered on this run.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Projeler.jsx CustomerCombobox: correctly calls api.get('/customers', { params: { search: debounced, page_size: 50 } }) — well within backend max 200. shouldFilter=false on Command lets server-side search drive the list (no client double-filtering).",
+    "Debounce 250ms on query + refetch on [open, debounced] is reasonable; initial fetch fires only when the popover opens (avoids wasted requests when the sheet is closed).",
+    "displayName is threaded from parent form.customer_name for both create and edit sheets, so edit pre-fills the trigger without waiting for the popover fetch to resolve — good UX and matches the verified behavior.",
+    "Options carry data-testid=customer-option-<id> and the input carries data-testid=project-customer-search — testability is solid.",
+    "Minor (non-blocking): on the create sheet, once a customer is chosen the trigger keeps showing the previously selected name if the user reopens & searches; onSelect only updates the parent form which then propagates displayName — behavior is correct, just noting for future maintainers."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only run)", "frontend": "100% (7/7 acceptance steps passed)"},
+  "test_credentials": "admin@arigastro.com / admin123 (from /app/memory/test_credentials.md).",
+  "seed_data_creation": "Created one project TEST_CB_Proje_ZZ (customer=Kamil Yıldırım, amount=12345 EUR) during the flow and DELETED it at the end via the delete-project-<id> button. Preview data is clean.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login via Playwright works reliably when using .fill() (or clearing existing input value first — do NOT .type() into a pre-filled email field; the browser's native email validator will reject two '@'s and swallow the click). Wait for the POST /api/auth/login response before navigating. The Projeler combobox flow uses: data-testid=new-project-btn, project-customer-select, project-customer-search, customer-option-<id>, project-name-input, project-amount-input, save-project-btn, edit-project-<id>, delete-project-<id>. Backend /api/customers?page_size supports 1..200 (default 20); requesting >200 returns 422 — do not raise this without updating the backend cap. No Cloudflare bot-block was seen this run; if a future agent hits one, wait a few minutes and rerun.",
+  "rca of the issue": "Original bug: Projeler.jsx used to call GET /api/customers?page_size=1000 to populate a plain <Select>. Backend enforces page_size<=200 (Query ge=1, le=200), so it returned 422 and the frontend rendered an empty option list. Fix (already shipped): replaced the plain Select with a Shadcn Popover+Command combobox that calls /customers with search=<debounced query>&page_size=50. Verified: (1) opening the combobox now shows a non-empty list; (2) typing filters server-side; (3) selection updates the trigger; (4) project create with the selected customer succeeds; (5) edit pre-fills the trigger with the existing customer name. All acceptance criteria in the review request are met."
+}

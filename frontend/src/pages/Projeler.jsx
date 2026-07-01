@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, formatApiError, formatMoney } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
@@ -14,8 +14,75 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
-import { Plus, Search, Pencil, Trash2, ChevronRight, FolderKanban } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../components/ui/command";
+import { Plus, Search, Pencil, Trash2, ChevronRight, FolderKanban, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "../lib/utils";
 import { toast } from "sonner";
+
+function CustomerCombobox({ value, displayName, onSelect }) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => { const id = setTimeout(() => setDebounced(query.trim()), 250); return () => clearTimeout(id); }, [query]);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    api.get("/customers", { params: { search: debounced, page_size: 50 } })
+      .then((r) => setResults(r.data.items || []))
+      .catch(() => setResults([]))
+      .finally(() => setLoading(false));
+  }, [open, debounced]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="mt-1 w-full justify-between font-normal"
+          data-testid="project-customer-select"
+        >
+          <span className={cn("truncate", !displayName && "text-zinc-400")}>
+            {displayName || t("projects.selectCustomer")}
+          </span>
+          <ChevronsUpDown size={15} className="ml-2 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput placeholder={t("projects.searchCustomer")} value={query} onValueChange={setQuery} data-testid="project-customer-search" />
+          <CommandList>
+            {loading && <div className="py-6 text-center text-sm text-zinc-400">{t("common.loading")}</div>}
+            {!loading && <CommandEmpty>{t("projects.noCustomerFound")}</CommandEmpty>}
+            {!loading && (
+              <CommandGroup>
+                {results.map((c) => (
+                  <CommandItem
+                    key={c.id}
+                    value={c.id}
+                    onSelect={() => { onSelect(c); setOpen(false); }}
+                    data-testid={`customer-option-${c.id}`}
+                  >
+                    <Check size={15} className={cn("mr-2", value === c.id ? "opacity-100 text-brand" : "opacity-0")} />
+                    <span className="truncate">{c.company_name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 const CURRENCIES = ["EUR", "TRY", "USD"];
 
@@ -32,14 +99,13 @@ export default function Projeler() {
 
   const [ready, setReady] = useState(false);
   const [items, setItems] = useState([]);
-  const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ customer_id: "", name: "", info: "", amount: "", currency: "EUR" });
+  const [form, setForm] = useState({ customer_id: "", customer_name: "", name: "", info: "", amount: "", currency: "EUR" });
 
   useEffect(() => {
     api.get("/settings")
@@ -48,13 +114,6 @@ export default function Projeler() {
   }, [user, navigate]);
 
   useEffect(() => { const id = setTimeout(() => setDebounced(search.trim()), 300); return () => clearTimeout(id); }, [search]);
-
-  useEffect(() => {
-    if (!ready) return;
-    api.get("/customers", { params: { page_size: 1000 } })
-      .then((r) => setCustomers(r.data.items || r.data || []))
-      .catch(() => {});
-  }, [ready]);
 
   const load = () => {
     if (!ready) return;
@@ -66,11 +125,11 @@ export default function Projeler() {
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [ready, debounced]);
 
-  const openNew = () => { setEditing(null); setForm({ customer_id: "", name: "", info: "", amount: "", currency: "EUR" }); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ customer_id: "", customer_name: "", name: "", info: "", amount: "", currency: "EUR" }); setOpen(true); };
   const openEdit = (p, e) => {
     e.stopPropagation();
     setEditing(p);
-    setForm({ customer_id: p.customer_id, name: p.name, info: p.info || "", amount: String(p.amount), currency: p.currency || "EUR" });
+    setForm({ customer_id: p.customer_id, customer_name: p.customer?.company_name || "", name: p.name, info: p.info || "", amount: String(p.amount), currency: p.currency || "EUR" });
     setOpen(true);
   };
 
@@ -91,10 +150,6 @@ export default function Projeler() {
     try { await api.delete(`/projects/${p.id}`); toast.success(t("projects.deleted")); load(); }
     catch (er) { toast.error(formatApiError(er)); }
   };
-
-  const customerName = useMemo(() => {
-    const m = {}; customers.forEach((c) => { m[c.id] = c.company_name; }); return m;
-  }, [customers]);
 
   if (!ready) return <div className="p-8 text-zinc-400">{t("common.loading")}</div>;
 
@@ -136,7 +191,7 @@ export default function Projeler() {
                         <span className="hover:text-brand" data-testid={`project-name-${p.id}`}>{p.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-zinc-600">{p.customer?.company_name || customerName[p.customer_id] || "-"}</td>
+                    <td className="px-4 py-3 text-zinc-600">{p.customer?.company_name || "-"}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-zinc-700">{formatMoney(p.amount, p.currency)}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-amber-600">{formatMoney(p.remaining_receivable, p.currency)}</td>
                     <td className={`px-4 py-3 text-right tabular-nums font-semibold ${p.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMoney(p.profit, p.currency)}</td>
@@ -164,12 +219,11 @@ export default function Projeler() {
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
             <div>
               <Label className="text-xs text-zinc-500">{t("projects.customer")}</Label>
-              <Select value={form.customer_id} onValueChange={(v) => setForm((f) => ({ ...f, customer_id: v }))}>
-                <SelectTrigger className="mt-1" data-testid="project-customer-select"><SelectValue placeholder={t("projects.selectCustomer")} /></SelectTrigger>
-                <SelectContent>
-                  {customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <CustomerCombobox
+                value={form.customer_id}
+                displayName={form.customer_name}
+                onSelect={(c) => setForm((f) => ({ ...f, customer_id: c.id, customer_name: c.company_name }))}
+              />
             </div>
             <div>
               <Label className="text-xs text-zinc-500">{t("projects.name")}</Label>
