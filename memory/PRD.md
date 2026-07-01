@@ -1,3 +1,9 @@
+## Round 10 — Project customer combobox fix (2026-07-01)
+- BUG (P0): "Proje Ekle" form customer list was empty. Root cause: frontend called GET /api/customers?page_size=1000, exceeding backend cap (le=200) → 422 → empty list.
+- FIX: Replaced plain <Select> in `Projeler.jsx` with a searchable Shadcn Combobox (Popover + Command, shouldFilter=false) doing server-side search: GET /api/customers?search=<debounced>&page_size=50. displayName threaded from form.customer_name for edit pre-fill. New i18n keys projects.searchCustomer / projects.noCustomerFound (DE+TR).
+- Verified 100% (iteration_9): open→non-empty list, type-to-search filters server-side, select updates trigger, create + edit pre-fill all pass. Test project created & deleted (data clean).
+
+
 ## Round 9 — Projects (Projekte/Projeler) module (2026-07-01)
 - New **Projects** module, fully SEPARATE from Accounting (own collections `projects`, `project_incomes`, `project_expenses` — never touches `transactions`).
 - **List page** (`/projeler`): add project (customer, name, info, amount, currency EUR/TRY/USD — default EUR). Table shows amount, remaining receivable, profit.
