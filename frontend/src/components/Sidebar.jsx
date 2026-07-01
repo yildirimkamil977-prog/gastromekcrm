@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users2, FileText, Package, Settings as SettingsIcon,
-  UserCog, LogOut, Calculator,
+  UserCog, LogOut, Calculator, FolderKanban,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
@@ -35,9 +35,10 @@ export default function Sidebar({ onNavigate }) {
   }, []);
 
   const canSeeAccounting = isAdmin || (settings?.accounting_visible_roles || []).includes(user?.role);
-  const links = canSeeAccounting
-    ? [...mainLinks, { to: "/muhasebe", key: "accounting", icon: Calculator, testid: "nav-accounting" }]
-    : mainLinks;
+  const canSeeProjects = isAdmin || (settings?.projects_visible_roles || []).includes(user?.role);
+  const links = [...mainLinks];
+  if (canSeeProjects) links.push({ to: "/projeler", key: "projects", icon: FolderKanban, testid: "nav-projects" });
+  if (canSeeAccounting) links.push({ to: "/muhasebe", key: "accounting", icon: Calculator, testid: "nav-accounting" });
   const roleLabel = user?.role === "admin"
     ? t("nav.roleAdmin")
     : user?.role === "muhasebe"

@@ -183,6 +183,8 @@ class CompanySettings(BaseModel):
     default_quote_notes: str = ""
     # Accounting page access — roles allowed to view it (admin always can)
     accounting_visible_roles: List[str] = ["admin", "sales", "muhasebe"]
+    # Projects page access — roles allowed to view it (admin always can)
+    projects_visible_roles: List[str] = ["admin", "sales", "muhasebe"]
 
 
 # ===== Auth =====
@@ -227,3 +229,57 @@ class TransactionUpdate(BaseModel):
     description: Optional[str] = None
     date: Optional[str] = None
     owner_id: Optional[str] = None
+
+
+# ===== Projects =====
+class ProjectCreate(BaseModel):
+    customer_id: str
+    name: str
+    info: Optional[str] = ""
+    amount: float = 0
+    currency: str = "EUR"
+
+
+class ProjectUpdate(BaseModel):
+    customer_id: Optional[str] = None
+    name: Optional[str] = None
+    info: Optional[str] = None
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+
+
+class ProjectIncomeCreate(BaseModel):
+    amount: float
+    currency: str = "EUR"
+    date: str
+    note: Optional[str] = ""
+
+
+class ProjectIncomeUpdate(BaseModel):
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    date: Optional[str] = None
+    note: Optional[str] = None
+
+
+class ProjectPaymentCreate(BaseModel):
+    amount: float
+    currency: str = "EUR"
+    date: str
+    note: Optional[str] = ""
+    receipts: List[str] = []
+
+
+class ProjectExpenseCreate(BaseModel):
+    name: str
+    total_debt: float = 0
+    currency: str = "EUR"
+    note: Optional[str] = ""
+    initial_payment: Optional[ProjectPaymentCreate] = None
+
+
+class ProjectExpenseUpdate(BaseModel):
+    name: Optional[str] = None
+    total_debt: Optional[float] = None
+    currency: Optional[str] = None
+    note: Optional[str] = None

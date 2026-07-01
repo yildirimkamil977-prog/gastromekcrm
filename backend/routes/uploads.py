@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Request, Depends, UploadFile, File, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 from auth import get_current_user_from_request
 
 UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", "/app/uploads"))
@@ -40,8 +40,16 @@ def build_uploads_router(db):
         dest.write_bytes(content)
 
         base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
-        url = f"{base}/uploads/{new_name}" if base else f"/uploads/{new_name}"
+        url = f"{base}/api/uploads/file/{new_name}" if base else f"/api/uploads/file/{new_name}"
         return {"url": url, "filename": new_name, "size": len(content)}
+
+    @router.get("/file/{name}")
+    async def serve_upload(name: str):
+        safe = Path(name).name
+        dest = UPLOAD_DIR / safe
+        if not dest.exists():
+            raise HTTPException(status_code=404, detail="Dosya bulunamadı")
+        return FileResponse(str(dest))
 
     return router
 

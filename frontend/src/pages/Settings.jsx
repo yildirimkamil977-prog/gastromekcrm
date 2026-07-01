@@ -64,6 +64,10 @@ export default function Settings() {
     const cur = form.accounting_visible_roles || [];
     set("accounting_visible_roles", cur.includes(role) ? cur.filter((r) => r !== role) : [...cur, role]);
   };
+  const toggleProjRole = (role) => {
+    const cur = form.projects_visible_roles || [];
+    set("projects_visible_roles", cur.includes(role) ? cur.filter((r) => r !== role) : [...cur, role]);
+  };
 
   const save = async () => {
     setSaving(true);
@@ -260,6 +264,23 @@ export default function Settings() {
                   <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
                     <span className="text-sm font-medium text-zinc-700">{t("settings.roleAccountingLabel")}</span>
                     <Switch checked={(form.accounting_visible_roles || []).includes("muhasebe")} onCheckedChange={() => toggleAccRole("muhasebe")} data-testid="access-muhasebe-switch" />
+                  </div>
+
+                  <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-1 pt-4">{t("settings.projectsAccessLabel")}</div>
+                  <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3 bg-zinc-50/60">
+                    <span className="text-sm font-medium text-zinc-700">{t("settings.roleAdminLabel")}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-zinc-400">{t("settings.alwaysOn")}</span>
+                      <Switch checked disabled />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
+                    <span className="text-sm font-medium text-zinc-700">{t("settings.roleSalesLabel")}</span>
+                    <Switch checked={(form.projects_visible_roles || []).includes("sales")} onCheckedChange={() => toggleProjRole("sales")} data-testid="access-proj-sales-switch" />
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
+                    <span className="text-sm font-medium text-zinc-700">{t("settings.roleAccountingLabel")}</span>
+                    <Switch checked={(form.projects_visible_roles || []).includes("muhasebe")} onCheckedChange={() => toggleProjRole("muhasebe")} data-testid="access-proj-muhasebe-switch" />
                   </div>
                 </div>
               </div>

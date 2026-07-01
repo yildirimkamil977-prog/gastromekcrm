@@ -26,6 +26,7 @@ from routes.quotes import build_quotes_router, build_public_pdf_router
 from routes.settings import build_settings_router, get_settings_doc
 from routes.uploads import build_uploads_router, build_image_proxy_router
 from routes.accounting import build_accounting_router
+from routes.projects import build_projects_router
 from feed_sync import start_daily_scheduler, sync_products
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -67,6 +68,7 @@ api_router.include_router(build_settings_router(db))
 api_router.include_router(build_uploads_router(db))
 api_router.include_router(build_image_proxy_router())
 api_router.include_router(build_accounting_router(db))
+api_router.include_router(build_projects_router(db))
 app.include_router(api_router)
 
 # CORS
@@ -143,6 +145,14 @@ async def ensure_indexes():
     await db.transactions.create_index("kind")
     await db.transactions.create_index("date")
     await db.transactions.create_index("created_at")
+
+    await db.projects.create_index("id", unique=True)
+    await db.projects.create_index("customer_id")
+    await db.projects.create_index("created_at")
+    await db.project_incomes.create_index("id", unique=True)
+    await db.project_incomes.create_index("project_id")
+    await db.project_expenses.create_index("id", unique=True)
+    await db.project_expenses.create_index("project_id")
 
     # TTL indexes — auto-cleanup to prevent unbounded growth
     # Login attempts: auto-delete after 1 hour
