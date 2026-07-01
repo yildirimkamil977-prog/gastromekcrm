@@ -1,3 +1,9 @@
+## Round 12 — Projects on Customer Profile (2026-07-01)
+- Customer detail (`/musteriler/:id`) now shows a "Projekte" table listing that customer's projects (name, Projektsumme, Offenes/remaining, Gewinn), each row navigates to `/projeler/:id`.
+- Backend: GET /projects gained optional `customer_id` filter. Frontend: CustomerDetail.load() fetches /projects?customer_id (role-gated, 403-tolerant); section only renders when projects.length>0.
+- Verified 100% (iteration_11, 5/5): section absent when no projects, appears with correct figures after create, row-click navigates, hidden again after delete. Test data cleaned.
+
+
 ## Round 11 — Project currency lock + income receipts (2026-07-01)
 - Project detail: income/expense/payment currency is now LOCKED to the project's currency (read-only CurrencyBadge, no Select). Amounts always use project currency.
 - Added receipt (dekont) image upload to the INCOME form (reused ReceiptField); income rows render receipt thumbnails. Backend `ProjectIncomeCreate/Update` gained `receipts: List[str]`.
