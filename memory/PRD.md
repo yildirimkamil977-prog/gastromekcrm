@@ -1,3 +1,9 @@
+## Round 14 — Removed login brute-force lockout (2026-07-01)
+- Per user request, removed the 5-attempts/15-min lockout (HTTP 429 "try again in 15 min") from `routes/auth_routes.py`. Also dropped the per-attempt `login_attempts` logging (only served the lockout).
+- Login flow (JWT cookie issuance, 401 on wrong creds) unchanged. Verified via curl: 7 wrong attempts all return 401 (no 429), correct login returns 200.
+- Security note: brute-force protection is now OFF. Can be re-added later with a higher threshold / IP-based limit if desired.
+
+
 ## Round 13 — PDF support in receipts/dekont (2026-07-01)
 - Receipt (dekont) uploads now accept PDF in addition to images, across income/expense/payment forms.
 - Backend `uploads.py`: added `.pdf` to ALLOWED_EXT, raised MAX_BYTES to 10 MB; served with correct application/pdf content-type. Verified via curl (upload + serve OK, .txt still rejected).
