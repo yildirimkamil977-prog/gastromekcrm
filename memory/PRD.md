@@ -1,3 +1,15 @@
+## Round 9 — Projects (Projekte/Projeler) module (2026-07-01)
+- New **Projects** module, fully SEPARATE from Accounting (own collections `projects`, `project_incomes`, `project_expenses` — never touches `transactions`).
+- **List page** (`/projeler`): add project (customer, name, info, amount, currency EUR/TRY/USD — default EUR). Table shows amount, remaining receivable, profit.
+- **Detail page** (`/projeler/:id`): summary cards (Projektsumme, Erhaltene Zahlungen, Offene Forderung, Gewinn). 
+  - **Incomes**: date/amount/currency/note. Remaining receivable = amount − total income.
+  - **Expenses**: name + total debt + optional initial payment. Per-expense installment **payments** (amount/currency/date/note/**receipt images**), paid/remaining, payment count. Expense detail dialog to add/delete payments + upload receipts.
+  - **Profit = project amount − sum(expense total debts)** (per user choice).
+- Delete project **cascades** to its incomes/expenses.
+- Access controlled per role via **Settings > Zugriff** (`projects_visible_roles`); admin always sees. New role muhasebe supported.
+- Uploads: `POST /api/uploads` now returns `/api/uploads/file/<name>` + a `GET` serve route → works on preview AND production.
+- Verified 100% (iteration_8): backend 55/55 pytest (13 new), frontend all flows, accounting separation confirmed, zero bugs.
+
 ## Round 8 — Accounting (Buchhaltung/Muhasebe) module (2026-06-15)
 - New **Accounting page** (`/muhasebe`): income & expense entries in **EUR**, optional description shown only after a category is picked.
   - Income types: Proje, Mağaza Satışı, Diğer. Expense types: Kira, Personel Maaşı, Muhasebe, Konaklama, Ulaşım, Fatura, Yazılım, Yemek, Yakıt, Diğer.
