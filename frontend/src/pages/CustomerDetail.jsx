@@ -9,7 +9,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { Plus, Save, Phone, Mail, MessageCircle, MapPin, ChevronRight } from "lucide-react";
+import { Plus, Save, Phone, Mail, MessageCircle, MapPin, ChevronRight, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 
 const QUOTES_PAGE_SIZE = 8;
@@ -20,6 +20,7 @@ export default function CustomerDetail() {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
   const [quotes, setQuotes] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [quotesPage, setQuotesPage] = useState(1);
@@ -42,6 +43,13 @@ export default function CustomerDetail() {
       toast.error(formatApiError(e));
     } finally {
       setLoading(false);
+    }
+    // Projects (role-gated): silently skip if no access.
+    try {
+      const p = await api.get("/projects", { params: { customer_id: id } });
+      setProjects(p.data.items || []);
+    } catch {
+      setProjects([]);
     }
   };
 
@@ -170,6 +178,44 @@ export default function CustomerDetail() {
           </div>
         </div>
       </div>
+
+      {/* Projects for this customer */}
+      {projects.length > 0 && (
+        <div className="px-4 sm:px-6 lg:px-8 pb-8" data-testid="customer-projects">
+          <div className="bg-white border border-zinc-200">
+            <div className="flex items-center px-5 h-14 border-b border-zinc-200">
+              <h3 className="font-heading font-semibold flex items-center gap-2">
+                <FolderKanban size={15} strokeWidth={1.5} className="text-brand" />
+                {t("projects.title")} <span className="text-zinc-400 text-sm font-normal">({projects.length})</span>
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wider text-zinc-500 border-b border-zinc-200 bg-zinc-50/60">
+                    <th className="px-5 py-3 font-semibold">{t("projects.name")}</th>
+                    <th className="px-5 py-3 font-semibold text-right">{t("projects.projectAmount")}</th>
+                    <th className="px-5 py-3 font-semibold text-right">{t("projects.remainingReceivable")}</th>
+                    <th className="px-5 py-3 font-semibold text-right">{t("projects.profit")}</th>
+                    <th className="px-5 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {projects.map((p) => (
+                    <tr key={p.id} className="group hover:bg-zinc-50 cursor-pointer transition-colors" onClick={() => navigate(`/projeler/${p.id}`)} data-testid={`customer-project-row-${p.id}`}>
+                      <td className="px-5 py-3 font-medium text-zinc-900">{p.name}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-zinc-700">{formatMoney(p.amount, p.currency)}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-amber-600">{formatMoney(p.remaining_receivable, p.currency)}</td>
+                      <td className={`px-5 py-3 text-right tabular-nums font-semibold ${p.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{formatMoney(p.profit, p.currency)}</td>
+                      <td className="px-5 py-3 text-right"><ChevronRight size={16} className="text-zinc-300 group-hover:text-brand transition-colors inline" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </FullBleed>
   );
 }

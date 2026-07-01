@@ -55,11 +55,13 @@ def build_projects_router(db):
 
     # ---- Projects list & CRUD ----
     @router.get("")
-    async def list_projects(search: str = Query(""), user=Depends(current_user)):
+    async def list_projects(search: str = Query(""), customer_id: str = Query(""), user=Depends(current_user)):
         await ensure_access(user)
         q = {}
         if search:
             q["name"] = {"$regex": re.escape(search), "$options": "i"}
+        if customer_id:
+            q["customer_id"] = customer_id
         projects = await db.projects.find(q, {"_id": 0}).sort("created_at", -1).limit(1000).to_list(1000)
         if not projects:
             return {"items": []}
