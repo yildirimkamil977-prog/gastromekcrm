@@ -1,3 +1,9 @@
+## Round 13 — PDF support in receipts/dekont (2026-07-01)
+- Receipt (dekont) uploads now accept PDF in addition to images, across income/expense/payment forms.
+- Backend `uploads.py`: added `.pdf` to ALLOWED_EXT, raised MAX_BYTES to 10 MB; served with correct application/pdf content-type. Verified via curl (upload + serve OK, .txt still rejected).
+- Frontend `ProjeDetay.jsx`: file inputs accept="image/*,application/pdf"; PDFs render as a clickable red "PDF" tile (FileText icon + link) instead of a broken <img> in the editor, income rows, and payment rows. `isPdf()` helper detects by extension.
+
+
 ## Round 12 — Projects on Customer Profile (2026-07-01)
 - Customer detail (`/musteriler/:id`) now shows a "Projekte" table listing that customer's projects (name, Projektsumme, Offenes/remaining, Gewinn), each row navigates to `/projeler/:id`.
 - Backend: GET /projects gained optional `customer_id` filter. Frontend: CustomerDetail.load() fetches /projects?customer_id (role-gated, 403-tolerant); section only renders when projects.length>0.

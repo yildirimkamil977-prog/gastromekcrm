@@ -12,11 +12,12 @@ import {
 } from "../components/ui/dialog";
 import {
   ArrowLeft, Plus, Pencil, Trash2, TrendingUp, Wallet, PiggyBank, Coins,
-  Receipt, Paperclip, Loader2, X, ChevronRight,
+  Receipt, Paperclip, Loader2, X, ChevronRight, FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
+const isPdf = (u) => /\.pdf($|\?)/i.test(u || "");
 
 export default function ProjeDetay() {
   const { t } = useT();
@@ -186,7 +187,13 @@ export default function ProjeDetay() {
                       <div className="flex gap-1.5 mt-1.5 flex-wrap">
                         {inc.receipts.map((u, i) => (
                           <a key={i} href={u} target="_blank" rel="noreferrer" data-testid={`income-receipt-thumb-${inc.id}-${i}`}>
-                            <img src={u} alt="receipt" className="w-9 h-9 object-cover rounded border border-zinc-200 hover:ring-2 hover:ring-brand" />
+                            {isPdf(u) ? (
+                              <span className="w-9 h-9 rounded border border-zinc-200 bg-red-50 text-red-600 flex flex-col items-center justify-center hover:ring-2 hover:ring-brand">
+                                <FileText size={13} /><span className="text-[7px] font-bold">PDF</span>
+                              </span>
+                            ) : (
+                              <img src={u} alt="receipt" className="w-9 h-9 object-cover rounded border border-zinc-200 hover:ring-2 hover:ring-brand" />
+                            )}
                           </a>
                         ))}
                       </div>
@@ -247,7 +254,7 @@ export default function ProjeDetay() {
             <div><Label className="text-xs text-zinc-500">{t("projects.date")}</Label><Input type="date" value={incomeForm.date} onChange={(e) => setIncomeForm((f) => ({ ...f, date: e.target.value }))} className="mt-1" data-testid="income-date-input" /></div>
             <div><Label className="text-xs text-zinc-500">{t("projects.note")}</Label><Textarea rows={2} value={incomeForm.note} onChange={(e) => setIncomeForm((f) => ({ ...f, note: e.target.value }))} className="mt-1" data-testid="income-note-input" /></div>
             <ReceiptField receipts={incomeForm.receipts} uploading={incUploading} onPick={() => incFileRef.current?.click()} onRemove={(u) => setIncomeForm((f) => ({ ...f, receipts: f.receipts.filter((x) => x !== u) }))} t={t} />
-            <input ref={incFileRef} type="file" accept="image/*" multiple className="hidden" onChange={onIncReceipts} />
+            <input ref={incFileRef} type="file" accept="image/*,application/pdf" multiple className="hidden" onChange={onIncReceipts} />
           </div>
           <DialogFooter><Button onClick={addIncome} className="bg-brand hover:bg-brand-hover text-white" data-testid="save-income-btn">{t("common.save")}</Button></DialogFooter>
         </DialogContent>
@@ -271,7 +278,7 @@ export default function ProjeDetay() {
               </div>
               <div><Label className="text-xs text-zinc-500">{t("projects.note")}</Label><Input value={expForm.payNote} onChange={(e) => setExpForm((f) => ({ ...f, payNote: e.target.value }))} className="mt-1" data-testid="expense-pay-note-input" /></div>
               <ReceiptField receipts={expForm.payReceipts} uploading={expUploading} onPick={() => expFileRef.current?.click()} onRemove={(u) => setExpForm((f) => ({ ...f, payReceipts: f.payReceipts.filter((x) => x !== u) }))} t={t} />
-              <input ref={expFileRef} type="file" accept="image/*" multiple className="hidden" onChange={onExpReceipts} />
+              <input ref={expFileRef} type="file" accept="image/*,application/pdf" multiple className="hidden" onChange={onExpReceipts} />
             </div>
           </div>
           <DialogFooter><Button onClick={addExpense} className="bg-brand hover:bg-brand-hover text-white" data-testid="save-expense-btn">{t("common.save")}</Button></DialogFooter>
@@ -307,7 +314,13 @@ export default function ProjeDetay() {
                         <div className="flex gap-1.5 mt-1.5 flex-wrap">
                           {p.receipts.map((u, i) => (
                             <a key={i} href={u} target="_blank" rel="noreferrer" data-testid={`receipt-thumb-${p.id}-${i}`}>
-                              <img src={u} alt="receipt" className="w-10 h-10 object-cover rounded border border-zinc-200 hover:ring-2 hover:ring-brand" />
+                              {isPdf(u) ? (
+                                <span className="w-10 h-10 rounded border border-zinc-200 bg-red-50 text-red-600 flex flex-col items-center justify-center hover:ring-2 hover:ring-brand">
+                                  <FileText size={14} /><span className="text-[7px] font-bold">PDF</span>
+                                </span>
+                              ) : (
+                                <img src={u} alt="receipt" className="w-10 h-10 object-cover rounded border border-zinc-200 hover:ring-2 hover:ring-brand" />
+                              )}
                             </a>
                           ))}
                         </div>
@@ -328,7 +341,7 @@ export default function ProjeDetay() {
                 </div>
                 <div><Label className="text-xs text-zinc-500">{t("projects.note")}</Label><Input value={payForm.note} onChange={(e) => setPayForm((f) => ({ ...f, note: e.target.value }))} className="mt-1" data-testid="payment-note-input" /></div>
                 <ReceiptField receipts={payForm.receipts} uploading={payUploading} onPick={() => payFileRef.current?.click()} onRemove={(u) => setPayForm((f) => ({ ...f, receipts: f.receipts.filter((x) => x !== u) }))} t={t} />
-                <input ref={payFileRef} type="file" accept="image/*" multiple className="hidden" onChange={onPayReceipts} />
+                <input ref={payFileRef} type="file" accept="image/*,application/pdf" multiple className="hidden" onChange={onPayReceipts} />
                 <Button onClick={addPayment} className="w-full bg-brand hover:bg-brand-hover text-white h-9" data-testid="save-payment-btn"><Plus size={14} className="mr-1" /> {t("projects.addPayment")}</Button>
               </div>
             </div>
@@ -366,7 +379,14 @@ function ReceiptField({ receipts, uploading, onPick, onRemove, t }) {
       <div className="flex items-center gap-2 flex-wrap mt-1">
         {receipts.map((u, i) => (
           <div key={i} className="relative group">
-            <img src={u} alt="receipt" className="w-12 h-12 object-cover rounded border border-zinc-200" />
+            {isPdf(u) ? (
+              <a href={u} target="_blank" rel="noreferrer" className="w-12 h-12 rounded border border-zinc-200 bg-red-50 text-red-600 flex flex-col items-center justify-center gap-0.5" data-testid={`receipt-pdf-${i}`}>
+                <FileText size={16} />
+                <span className="text-[8px] font-bold tracking-wide">PDF</span>
+              </a>
+            ) : (
+              <img src={u} alt="receipt" className="w-12 h-12 object-cover rounded border border-zinc-200" />
+            )}
             <button type="button" onClick={() => onRemove(u)} className="absolute -top-1.5 -right-1.5 bg-white rounded-full border border-zinc-300 text-red-600 shadow-sm" data-testid={`remove-receipt-${i}`}><X size={12} /></button>
           </div>
         ))}

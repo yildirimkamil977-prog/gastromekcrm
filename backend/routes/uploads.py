@@ -12,8 +12,8 @@ from auth import get_current_user_from_request
 UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", "/app/uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
-MAX_BYTES = 5 * 1024 * 1024  # 5 MB
+ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".pdf"}
+MAX_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 def build_uploads_router(db):
