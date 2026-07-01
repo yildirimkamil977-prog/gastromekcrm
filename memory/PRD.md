@@ -1,3 +1,10 @@
+## Round 11 — Project currency lock + income receipts (2026-07-01)
+- Project detail: income/expense/payment currency is now LOCKED to the project's currency (read-only CurrencyBadge, no Select). Amounts always use project currency.
+- Added receipt (dekont) image upload to the INCOME form (reused ReceiptField); income rows render receipt thumbnails. Backend `ProjectIncomeCreate/Update` gained `receipts: List[str]`.
+- Receipt upload is OPTIONAL for income & expense/payment (empty allowed).
+- Verified 100% (iteration_10, 8/8): currency locked to TRY across all forms, income saved with/without receipt, thumbnails shown, all amounts render in project currency. Test data cleaned.
+
+
 ## Round 10 — Project customer combobox fix (2026-07-01)
 - BUG (P0): "Proje Ekle" form customer list was empty. Root cause: frontend called GET /api/customers?page_size=1000, exceeding backend cap (le=200) → 422 → empty list.
 - FIX: Replaced plain <Select> in `Projeler.jsx` with a searchable Shadcn Combobox (Popover + Command, shouldFilter=false) doing server-side search: GET /api/customers?search=<debounced>&page_size=50. displayName threaded from form.customer_name for edit pre-fill. New i18n keys projects.searchCustomer / projects.noCustomerFound (DE+TR).
