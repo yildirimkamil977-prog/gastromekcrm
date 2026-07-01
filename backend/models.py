@@ -253,6 +253,7 @@ class ProjectIncomeCreate(BaseModel):
     currency: str = "EUR"
     date: str
     note: Optional[str] = ""
+    receipts: List[str] = []
 
 
 class ProjectIncomeUpdate(BaseModel):
@@ -260,6 +261,7 @@ class ProjectIncomeUpdate(BaseModel):
     currency: Optional[str] = None
     date: Optional[str] = None
     note: Optional[str] = None
+    receipts: Optional[List[str]] = None
 
 
 class ProjectPaymentCreate(BaseModel):

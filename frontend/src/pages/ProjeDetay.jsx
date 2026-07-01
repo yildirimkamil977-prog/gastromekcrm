@@ -11,15 +11,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "../components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../components/ui/select";
-import {
   ArrowLeft, Plus, Pencil, Trash2, TrendingUp, Wallet, PiggyBank, Coins,
   Receipt, Paperclip, Loader2, X, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
-const CURRENCIES = ["EUR", "TRY", "USD"];
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function ProjeDetay() {
@@ -31,7 +27,9 @@ export default function ProjeDetay() {
   const [loading, setLoading] = useState(true);
 
   const [incomeOpen, setIncomeOpen] = useState(false);
-  const [incomeForm, setIncomeForm] = useState({ amount: "", currency: "EUR", date: todayISO(), note: "" });
+  const [incomeForm, setIncomeForm] = useState({ amount: "", currency: "EUR", date: todayISO(), note: "", receipts: [] });
+  const [incUploading, setIncUploading] = useState(false);
+  const incFileRef = useRef(null);
 
   const [expOpen, setExpOpen] = useState(false);
   const [expForm, setExpForm] = useState({ name: "", total_debt: "", currency: "EUR", payAmount: "", payDate: todayISO(), payNote: "", payReceipts: [] });
@@ -74,18 +72,24 @@ export default function ProjeDetay() {
   };
 
   // ----- Income -----
-  const openIncome = () => { setIncomeForm({ amount: "", currency, date: todayISO(), note: "" }); setIncomeOpen(true); };
+  const openIncome = () => { setIncomeForm({ amount: "", currency, date: todayISO(), note: "", receipts: [] }); setIncomeOpen(true); };
   const addIncome = async () => {
     const amt = Number(incomeForm.amount);
     if (!amt || amt <= 0) { toast.error(t("projects.amountRequired")); return; }
     try {
-      await api.post(`/projects/${id}/incomes`, { amount: amt, currency: incomeForm.currency, date: incomeForm.date, note: incomeForm.note });
+      await api.post(`/projects/${id}/incomes`, { amount: amt, currency, date: incomeForm.date, note: incomeForm.note, receipts: incomeForm.receipts });
       toast.success(t("projects.incomeAdded")); setIncomeOpen(false); load();
     } catch (e) { toast.error(formatApiError(e)); }
   };
   const delIncome = async (incId) => {
     if (!window.confirm(t("projects.confirmDeleteIncome"))) return;
     try { await api.delete(`/projects/${id}/incomes/${incId}`); load(); } catch (e) { toast.error(formatApiError(e)); }
+  };
+  const onIncReceipts = async (e) => {
+    const files = Array.from(e.target.files || []); if (!files.length) return;
+    setIncUploading(true);
+    try { const urls = await uploadFiles(files); setIncomeForm((f) => ({ ...f, receipts: [...f.receipts, ...urls] })); }
+    catch (er) { toast.error(formatApiError(er)); } finally { setIncUploading(false); if (incFileRef.current) incFileRef.current.value = ""; }
   };
 
   // ----- Expense -----
@@ -178,6 +182,15 @@ export default function ProjeDetay() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-zinc-900">{formatDate(inc.date)}</div>
                     {inc.note && <div className="text-xs text-zinc-500 truncate">{inc.note}</div>}
+                    {(inc.receipts || []).length > 0 && (
+                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                        {inc.receipts.map((u, i) => (
+                          <a key={i} href={u} target="_blank" rel="noreferrer" data-testid={`income-receipt-thumb-${inc.id}-${i}`}>
+                            <img src={u} alt="receipt" className="w-9 h-9 object-cover rounded border border-zinc-200 hover:ring-2 hover:ring-brand" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="font-semibold tabular-nums text-green-600 text-sm">+ {formatMoney(inc.amount, inc.currency)}</div>
                   <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 lg:opacity-0 lg:group-hover:opacity-100" onClick={() => delIncome(inc.id)} data-testid={`delete-income-${inc.id}`}><Trash2 size={13} /></Button>
@@ -229,12 +242,12 @@ export default function ProjeDetay() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs text-zinc-500">{t("projects.fieldAmount")}</Label><Input type="number" step="0.01" min="0" value={incomeForm.amount} onChange={(e) => setIncomeForm((f) => ({ ...f, amount: e.target.value }))} className="mt-1" data-testid="income-amount-input" /></div>
-              <div><Label className="text-xs text-zinc-500">{t("projects.currency")}</Label>
-                <Select value={incomeForm.currency} onValueChange={(v) => setIncomeForm((f) => ({ ...f, currency: v }))}><SelectTrigger className="mt-1" data-testid="income-currency-select"><SelectValue /></SelectTrigger><SelectContent>{CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-              </div>
+              <CurrencyBadge value={currency} label={t("projects.currency")} testid="income-currency-fixed" />
             </div>
             <div><Label className="text-xs text-zinc-500">{t("projects.date")}</Label><Input type="date" value={incomeForm.date} onChange={(e) => setIncomeForm((f) => ({ ...f, date: e.target.value }))} className="mt-1" data-testid="income-date-input" /></div>
             <div><Label className="text-xs text-zinc-500">{t("projects.note")}</Label><Textarea rows={2} value={incomeForm.note} onChange={(e) => setIncomeForm((f) => ({ ...f, note: e.target.value }))} className="mt-1" data-testid="income-note-input" /></div>
+            <ReceiptField receipts={incomeForm.receipts} uploading={incUploading} onPick={() => incFileRef.current?.click()} onRemove={(u) => setIncomeForm((f) => ({ ...f, receipts: f.receipts.filter((x) => x !== u) }))} t={t} />
+            <input ref={incFileRef} type="file" accept="image/*" multiple className="hidden" onChange={onIncReceipts} />
           </div>
           <DialogFooter><Button onClick={addIncome} className="bg-brand hover:bg-brand-hover text-white" data-testid="save-income-btn">{t("common.save")}</Button></DialogFooter>
         </DialogContent>
@@ -248,9 +261,7 @@ export default function ProjeDetay() {
             <div><Label className="text-xs text-zinc-500">{t("projects.expenseName")}</Label><Input value={expForm.name} onChange={(e) => setExpForm((f) => ({ ...f, name: e.target.value }))} placeholder={t("projects.expenseNamePlaceholder")} className="mt-1" data-testid="expense-name-input" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs text-zinc-500">{t("projects.totalDebt")}</Label><Input type="number" step="0.01" min="0" value={expForm.total_debt} onChange={(e) => setExpForm((f) => ({ ...f, total_debt: e.target.value }))} className="mt-1" data-testid="expense-debt-input" /></div>
-              <div><Label className="text-xs text-zinc-500">{t("projects.currency")}</Label>
-                <Select value={expForm.currency} onValueChange={(v) => setExpForm((f) => ({ ...f, currency: v }))}><SelectTrigger className="mt-1" data-testid="expense-currency-select"><SelectValue /></SelectTrigger><SelectContent>{CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-              </div>
+              <CurrencyBadge value={currency} label={t("projects.currency")} testid="expense-currency-fixed" />
             </div>
             <div className="rounded-md border border-zinc-200 p-3 space-y-3">
               <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t("projects.initialPayment")}</div>
@@ -312,9 +323,7 @@ export default function ProjeDetay() {
                 <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t("projects.addPayment")}</div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-1"><Label className="text-xs text-zinc-500">{t("projects.fieldAmount")}</Label><Input type="number" step="0.01" min="0" value={payForm.amount} onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))} className="mt-1" data-testid="payment-amount-input" /></div>
-                  <div className="col-span-1"><Label className="text-xs text-zinc-500">{t("projects.currency")}</Label>
-                    <Select value={payForm.currency} onValueChange={(v) => setPayForm((f) => ({ ...f, currency: v }))}><SelectTrigger className="mt-1" data-testid="payment-currency-select"><SelectValue /></SelectTrigger><SelectContent>{CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-                  </div>
+                  <CurrencyBadge value={activeExp.currency} label={t("projects.currency")} testid="payment-currency-fixed" />
                   <div className="col-span-1"><Label className="text-xs text-zinc-500">{t("projects.date")}</Label><Input type="date" value={payForm.date} onChange={(e) => setPayForm((f) => ({ ...f, date: e.target.value }))} className="mt-1" data-testid="payment-date-input" /></div>
                 </div>
                 <div><Label className="text-xs text-zinc-500">{t("projects.note")}</Label><Input value={payForm.note} onChange={(e) => setPayForm((f) => ({ ...f, note: e.target.value }))} className="mt-1" data-testid="payment-note-input" /></div>
@@ -327,6 +336,15 @@ export default function ProjeDetay() {
         </DialogContent>
       </Dialog>
     </FullBleed>
+  );
+}
+
+function CurrencyBadge({ value, label, testid }) {
+  return (
+    <div>
+      <Label className="text-xs text-zinc-500">{label}</Label>
+      <div className="mt-1 h-10 flex items-center px-3 rounded-md border border-zinc-200 bg-zinc-50 text-sm font-medium text-zinc-600 tabular-nums" data-testid={testid}>{value}</div>
+    </div>
   );
 }
 
