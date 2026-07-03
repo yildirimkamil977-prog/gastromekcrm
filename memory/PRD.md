@@ -1,3 +1,10 @@
+## Round 15 — "Fiyatsız Olarak İndir" (priceless PDF) (2026-07-01)
+- Quote view (`/teklifler/:id`) got a new "Fiyatsız Olarak İndir" / "Ohne Preise herunterladen" button (data-testid=download-priceless-pdf-btn) next to the normal PDF download.
+- `QuotePDFTemplate` gained `priceless` + `rootId` props. When priceless: hides unit-price/disc/amount columns, the totals block (subtotal/VAT/discount/grand total), the notes section, and the validity ('valid until') lines (header + footer). Product name & quantity remain.
+- QuoteView renders a hidden off-screen priceless template (#quote-pdf-root-priceless); generatePdf(rootId) is shared. Filename suffix i18n (TR 'fiyatsiz' / DE 'ohne-Preise'). Normal download unchanged.
+- Verified 100% (iteration_12, 6/6): visible template keeps 7 columns+totals+notes+validity; hidden priceless has 4 columns, no totals/notes/validity; both downloads work, zero console errors.
+
+
 ## Round 14 — Removed login brute-force lockout (2026-07-01)
 - Per user request, removed the 5-attempts/15-min lockout (HTTP 429 "try again in 15 min") from `routes/auth_routes.py`. Also dropped the per-attempt `login_attempts` logging (only served the lockout).
 - Login flow (JWT cookie issuance, 401 on wrong creds) unchanged. Verified via curl: 7 wrong attempts all return 401 (no 429), correct login returns 200.
