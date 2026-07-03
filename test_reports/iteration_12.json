@@ -1,0 +1,27 @@
+{
+  "summary": "Frontend-only verification of the new 'Fiyatsız Olarak İndir' (priceless PDF download) feature on the quote view page. All 6 acceptance steps passed end-to-end against the preview URL. Login admin@arigastro.com/admin123 -> /. Navigated to /teklifler, picked first existing quote id=6bb51376-3fd7-4430-8b60-e30f3c5879c7 (Angebot GM-202606-0002, Esra Butik, 1 line item 'Özel Kalem', total €119). On /teklifler/<id> both buttons rendered correctly: [data-testid=download-pdf-btn] (label 'PDF herunterladen') and [data-testid=download-priceless-pdf-btn] (label 'Ohne Preise herunterladen') -- DE default UI. VISIBLE template (#quote-pdf-root) has 7 table headers ['#','Bild','Produkt','Menge','Einzelpreis','Rab.%','Betrag'], contains 'Gesamtbetrag' block, validity line 'Gültig bis' and notes, all as expected. HIDDEN priceless template (#quote-pdf-root-priceless) exists off-screen (position absolute left -99999px), has only 4 table headers ['#','Bild','Produkt','Menge'] (correctly stripped Einzelpreis/Rab.%/Betrag), does NOT contain any grand-total block (Gesamtbetrag/Genel Toplam), does NOT contain any Gültig/Geçerlilik/Validity phrase, does NOT contain the notes header. Product name+quantity are still listed. Clicking [data-testid=download-priceless-pdf-btn] triggered a real download 'Angebot-GM-202606-0002-ohne-Preise.pdf' (uses quoteView.pricelessSuffix='ohne-Preise' as designed), no error toast, button loading state properly exited (disabled=false). Clicking [data-testid=download-pdf-btn] also downloaded 'Angebot-GM-202606-0002.pdf' successfully with no error toast. ZERO console errors during either PDF generation. No seed data created, no cleanup needed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "QuoteView.jsx renders the hidden priceless template with position:absolute left:-99999px so html2canvas can capture a real, laid-out DOM rather than a display:none clone. Correct approach.",
+    "generatePdf() has been refactored to accept a rootId parameter (defaults to 'quote-pdf-root') so both download paths share the same slicing/pagination logic. Good DRY.",
+    "QuotePDFTemplate.jsx correctly gates all price-related nodes behind !priceless: 3 table columns (Einzelpreis/Rab./Betrag), the entire totals table, the notes section, the header 'Gültig bis' line, and the footer 'Dieses Angebot ist gültig bis <date>' line. Verified all four gates from live DOM: header count 7->4, no Gesamtbetrag, no Gültig, no Notizen.",
+    "Minor cosmetic: on the ONLY-quantity priceless layout the Menge column still uses textAlign:right with a narrow 50px width -- for wider product tables this can look off-balance. Non-blocking.",
+    "Two hidden clones are effectively rendered simultaneously (visible + off-screen priceless), meaning image assets (product images, company logo) load twice. On slow networks this could slightly delay first paint but does not affect the SafeImg proxy fallback path.",
+    "The off-screen container uses aria-hidden='true' -- good for screen readers -- but does NOT set tabIndex=-1, so focusable elements inside (none currently, but future links) could still be tab-reached at -99999px. Non-blocking today."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only per request)", "frontend": "100% (6/6 acceptance checks passed)"},
+  "test_credentials": "admin@arigastro.com / admin123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None. Used existing quote GM-202606-0002 (id=6bb51376-3fd7-4430-8b60-e30f3c5879c7). No modifications made.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Priceless PDF feature is fully wired. Testids: [data-testid=download-pdf-btn] (green primary), [data-testid=download-priceless-pdf-btn] (outline brand). DOM IDs: #quote-pdf-root (visible preview, has prices) and #quote-pdf-root-priceless (hidden off-screen clone, no prices/totals/notes/validity). i18n suffix key quoteView.pricelessSuffix renders as 'ohne-Preise' in DE default and would render as 'fiyatsiz' or similar in TR (filename verified: 'Angebot-GM-202606-0002-ohne-Preise.pdf'). Header count assertion (visible=7 vs priceless=4) is the most reliable smoke check for the column-strip logic; a numeric diff of 3 corresponds to the three price columns being removed.",
+  "rca of the issue": "N/A -- fresh feature acceptance run, all functional and visual DOM assertions match the spec."
+}

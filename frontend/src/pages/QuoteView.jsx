@@ -16,7 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import {
-  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer,
+  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -71,13 +71,13 @@ export default function QuoteView() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
-  const generatePdf = async () => {
+  const generatePdf = async (rootId = "quote-pdf-root") => {
     setGenerating(true);
     try {
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
-      const node = pdfRef.current?.querySelector("#quote-pdf-root");
+      const node = document.getElementById(rootId);
       if (!node) throw new Error(t("quoteView.pdfTemplateNotFound"));
 
       const waitForImages = async () => {
@@ -156,6 +156,15 @@ export default function QuoteView() {
     try {
       const pdf = await generatePdf();
       pdf.save(`${t("quoteView.pdfFilePrefix")}-${quote.quote_no}.pdf`);
+    } catch (e) {
+      toast.error(t("quoteView.pdfError") + e.message);
+    }
+  };
+
+  const downloadPricelessPdf = async () => {
+    try {
+      const pdf = await generatePdf("quote-pdf-root-priceless");
+      pdf.save(`${t("quoteView.pdfFilePrefix")}-${quote.quote_no}-${t("quoteView.pricelessSuffix")}.pdf`);
     } catch (e) {
       toast.error(t("quoteView.pdfError") + e.message);
     }
@@ -265,6 +274,10 @@ export default function QuoteView() {
           {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Download size={14} strokeWidth={1.5} className="mr-2" />}
           {t("quoteView.downloadPdf")}
         </Button>
+        <Button onClick={downloadPricelessPdf} disabled={generating} variant="outline" className="border-brand/40 text-brand hover:bg-brand-light" data-testid="download-priceless-pdf-btn">
+          {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <FileDown size={14} strokeWidth={1.5} className="mr-2" />}
+          {t("quoteView.downloadPricelessPdf")}
+        </Button>
         <Button variant="outline" onClick={() => window.print()} data-testid="print-btn"><Printer size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.print")}</Button>
 
         <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
@@ -335,6 +348,11 @@ export default function QuoteView() {
             <div className="mx-auto shadow-2xl" style={{ width: "210mm", minWidth: "210mm" }}>
               <QuotePDFTemplate quote={quote} customer={customer} company={company} />
             </div>
+          </div>
+
+          {/* Hidden priceless template — off-screen, used only for the "priceless" PDF export */}
+          <div aria-hidden="true" style={{ position: "absolute", left: "-99999px", top: 0, width: "210mm" }}>
+            <QuotePDFTemplate quote={quote} customer={customer} company={company} priceless rootId="quote-pdf-root-priceless" />
           </div>
         </div>
 

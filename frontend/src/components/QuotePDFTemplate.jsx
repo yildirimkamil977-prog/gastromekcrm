@@ -30,7 +30,7 @@ function SafeImg({ src, style, alt = "" }) {
  * Keeps itself print-friendly; uses inline styles for html2canvas reliability.
  * Text content is localized via the active language (German default / Turkish).
  */
-export default function QuotePDFTemplate({ quote, customer, company }) {
+export default function QuotePDFTemplate({ quote, customer, company, priceless = false, rootId = "quote-pdf-root" }) {
   const { t } = useT();
   const {
     quote_no, issue_date, valid_until, currency, items = [],
@@ -42,7 +42,7 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
   return (
     <div
       className="pdf-root"
-      id="quote-pdf-root"
+      id={rootId}
       style={{
         padding: "12mm 16mm 16mm",
         width: "210mm",
@@ -82,7 +82,7 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
           <div style={{ fontSize: 10, color: "#475569", marginTop: 6 }}>
             <div><b>{t("pdf.quoteNo")}</b> {quote_no}</div>
             <div><b>{t("pdf.date")}</b> {formatDate(issue_date)}</div>
-            <div><b>{t("pdf.validity")}</b> {formatDate(valid_until)}</div>
+            {!priceless && <div><b>{t("pdf.validity")}</b> {formatDate(valid_until)}</div>}
           </div>
         </div>
       </div>
@@ -118,9 +118,9 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
             <th style={{ padding: "8px 6px", textAlign: "left", width: 70 }}>{t("pdf.thImage")}</th>
             <th style={{ padding: "8px 6px", textAlign: "left" }}>{t("pdf.thProduct")}</th>
             <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>{t("pdf.thQty")}</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 90 }}>{t("pdf.thUnitPrice")}</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>{t("pdf.thDisc")}</th>
-            <th style={{ padding: "8px 6px", textAlign: "right", width: 100 }}>{t("pdf.thAmount")}</th>
+            {!priceless && <th style={{ padding: "8px 6px", textAlign: "right", width: 90 }}>{t("pdf.thUnitPrice")}</th>}
+            {!priceless && <th style={{ padding: "8px 6px", textAlign: "right", width: 50 }}>{t("pdf.thDisc")}</th>}
+            {!priceless && <th style={{ padding: "8px 6px", textAlign: "right", width: 100 }}>{t("pdf.thAmount")}</th>}
           </tr>
         </thead>
         <tbody>
@@ -151,9 +151,9 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
                   )}
                 </td>
                 <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{Number(it.quantity) || 0}</td>
-                <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{formatMoney(it.unit_price, currency)}</td>
-                <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{Number(it.discount_percent) || 0}%</td>
-                <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top", fontWeight: 600 }}>{formatMoney(after, currency)}</td>
+                {!priceless && <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{formatMoney(it.unit_price, currency)}</td>}
+                {!priceless && <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top" }}>{Number(it.discount_percent) || 0}%</td>}
+                {!priceless && <td style={{ padding: "8px 6px", textAlign: "right", verticalAlign: "top", fontWeight: 600 }}>{formatMoney(after, currency)}</td>}
               </tr>
             );
           })}
@@ -161,6 +161,7 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
       </table>
 
       {/* Totals */}
+      {!priceless && (
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
         <table style={{ fontSize: 11, minWidth: 280, borderCollapse: "separate", borderSpacing: 0 }}>
           <tbody>
@@ -191,9 +192,10 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Notes */}
-      {notes && (
+      {!priceless && notes && (
         <div style={{ marginTop: 24, padding: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }}>
           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8", marginBottom: 4 }}>{t("pdf.notes")}</div>
           <div style={{ fontSize: 10, color: "#334155", whiteSpace: "pre-wrap" }}>{notes}</div>
@@ -240,7 +242,7 @@ export default function QuotePDFTemplate({ quote, customer, company }) {
           })()}
         </div>
         <div style={{ textAlign: "right" }}>
-          <div>{t("pdf.validityFooter", { date: formatDate(valid_until) })}</div>
+          {!priceless && <div>{t("pdf.validityFooter", { date: formatDate(valid_until) })}</div>}
         </div>
       </div>
 
