@@ -12,7 +12,7 @@ import {
 } from "../components/ui/dialog";
 import {
   ArrowLeft, Plus, Pencil, Trash2, TrendingUp, Wallet, PiggyBank, Coins,
-  Receipt, Paperclip, Loader2, X, ChevronRight, FileText,
+  Receipt, Paperclip, Loader2, X, ChevronRight, FileText, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +39,8 @@ export default function ProjeDetay() {
   const [activeExpId, setActiveExpId] = useState(null);
   const [payForm, setPayForm] = useState({ amount: "", currency: "EUR", date: todayISO(), note: "", receipts: [] });
   const [payUploading, setPayUploading] = useState(false);
+  const [editDebt, setEditDebt] = useState(false);
+  const [debtValue, setDebtValue] = useState("");
   const payFileRef = useRef(null);
   const expFileRef = useRef(null);
 
@@ -120,6 +122,14 @@ export default function ProjeDetay() {
 
   // ----- Payments -----
   const openPayForm = () => setPayForm({ amount: "", currency: activeExp?.currency || currency, date: todayISO(), note: "", receipts: [] });
+  const saveDebt = async () => {
+    const v = Number(debtValue);
+    if (isNaN(v) || v < 0) { toast.error(t("projects.amountRequired")); return; }
+    try {
+      await api.put(`/projects/${id}/expenses/${activeExpId}`, { total_debt: v });
+      toast.success(t("projects.expenseUpdated")); setEditDebt(false); load();
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
   const addPayment = async () => {
     const amt = Number(payForm.amount);
     if (!amt || amt <= 0) { toast.error(t("projects.amountRequired")); return; }
@@ -219,7 +229,7 @@ export default function ProjeDetay() {
             <div className="divide-y divide-zinc-100">
               {expenses.length === 0 && <div className="p-6 text-center text-sm text-zinc-400">{t("projects.noExpense")}</div>}
               {expenses.map((exp) => (
-                <div key={exp.id} className="group px-5 py-3 hover:bg-zinc-50 cursor-pointer" onClick={() => { setActiveExpId(exp.id); openPayForm(); }} data-testid={`expense-row-${exp.id}`}>
+                <div key={exp.id} className="group px-5 py-3 hover:bg-zinc-50 cursor-pointer" onClick={() => { setActiveExpId(exp.id); setEditDebt(false); openPayForm(); }} data-testid={`expense-row-${exp.id}`}>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-zinc-900 truncate">{exp.name}</div>
@@ -295,7 +305,19 @@ export default function ProjeDetay() {
           {activeExp && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 text-center">
-                <div className="bg-white py-2"><div className="text-[10px] uppercase text-zinc-500">{t("projects.totalDebt")}</div><div className="font-semibold text-sm text-zinc-800">{formatMoney(activeExp.total_debt, activeExp.currency)}</div></div>
+                <div className="bg-white py-2"><div className="text-[10px] uppercase text-zinc-500">{t("projects.totalDebt")}</div>
+                  {editDebt ? (
+                    <div className="flex items-center justify-center gap-1 px-2 mt-1">
+                      <Input type="number" step="0.01" min="0" value={debtValue} onChange={(e) => setDebtValue(e.target.value)} className="h-7 text-sm text-center px-1" data-testid="edit-debt-input" />
+                      <Button size="sm" className="h-7 w-7 p-0 bg-brand hover:bg-brand-hover text-white shrink-0" onClick={saveDebt} data-testid="save-debt-btn"><Check size={13} /></Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditDebt(false)} data-testid="cancel-debt-btn"><X size={13} /></Button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => { setDebtValue(String(activeExp.total_debt)); setEditDebt(true); }} className="font-semibold text-sm text-zinc-800 inline-flex items-center gap-1 hover:text-brand" data-testid="edit-debt-btn">
+                      {formatMoney(activeExp.total_debt, activeExp.currency)} <Pencil size={11} className="text-zinc-400" />
+                    </button>
+                  )}
+                </div>
                 <div className="bg-white py-2"><div className="text-[10px] uppercase text-zinc-500">{t("projects.paid")}</div><div className="font-semibold text-sm text-green-600">{formatMoney(activeExp.paid, activeExp.currency)}</div></div>
                 <div className="bg-white py-2"><div className="text-[10px] uppercase text-zinc-500">{t("projects.remaining")}</div><div className="font-semibold text-sm text-red-600">{formatMoney(activeExp.remaining, activeExp.currency)}</div></div>
               </div>
