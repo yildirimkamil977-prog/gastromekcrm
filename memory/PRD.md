@@ -1,3 +1,9 @@
+## Round 16 — Editable expense total debt (2026-07-01)
+- In the expense detail dialog (ProjeDetay), the "Toplam Borç / Gesamtschuld" (total debt) card is now editable: pencil (edit-debt-btn) → inline input (edit-debt-input) + save (save-debt-btn) / cancel (cancel-debt-btn). Saving PUTs total_debt and the "Kalan/Offen" remaining recalculates.
+- i18n: projects.expenseUpdated (DE 'Ausgabe aktualisiert' / TR 'Gider güncellendi'). Backend PUT /projects/{id}/expenses/{eid} already supported total_debt.
+- Verified 100% (iteration_13, 6/6): edit+save updates debt & remaining, cancel preserves value, list row reflects change, zero console errors. Test data cleaned.
+
+
 ## Round 15 — "Fiyatsız Olarak İndir" (priceless PDF) (2026-07-01)
 - Quote view (`/teklifler/:id`) got a new "Fiyatsız Olarak İndir" / "Ohne Preise herunterladen" button (data-testid=download-priceless-pdf-btn) next to the normal PDF download.
 - `QuotePDFTemplate` gained `priceless` + `rootId` props. When priceless: hides unit-price/disc/amount columns, the totals block (subtotal/VAT/discount/grand total), the notes section, and the validity ('valid until') lines (header + footer). Product name & quantity remain.
