@@ -8,7 +8,7 @@ SETTINGS_KEY = "company"
 
 def _sanitize_for_sales(data: dict) -> dict:
     """Remove sensitive keys when sales role reads settings."""
-    sensitive = {"resend_api_key", "smtp_password"}
+    sensitive = {"resend_api_key", "smtp_password", "openai_api_key"}
     return {k: v for k, v in data.items() if k not in sensitive}
 
 

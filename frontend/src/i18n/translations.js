@@ -446,6 +446,9 @@ export const translations = {
         "Beispiel:\n<b>Max Mustermann</b><br/>Vertriebsleiter<br/>Gastromek · +49 555 000 00 00<br/><a href=\"https://gastromek.de\">gastromek.de</a>",
       signatureHelp:
         "Diese Signatur wird automatisch am Ende jeder gesendeten Angebots-E-Mail hinzugefügt. HTML-Tags werden unterstützt. Mit \"Bild zur Signatur hinzufügen\" können Sie ein Logo/Banner hochladen.",
+      openaiApiKey: "OpenAI API-Schlüssel (Übersetzung)",
+      openaiApiKeyHelp:
+        "Wird für die Angebots-PDF-Übersetzung (Deutsch/Türkisch) verwendet. Ihren Schlüssel finden Sie unter platform.openai.com. Er wird sicher gespeichert und nie im PDF angezeigt.",
       defaultValidity: "Standard-Gültigkeit (Tage)",
       defaultQuoteNotes: "Standard-Angebotsnotizen",
       defaultQuoteNotesPlaceholder: "Zahlungsbedingungen, Lieferzeit, Garantie…",
@@ -903,6 +906,9 @@ export const translations = {
         'Örnek:\n<b>Murat Yılmaz</b><br/>Satış Müdürü<br/>Gastromek · +90 555 000 00 00<br/><a href="https://gastromek.com">gastromek.com</a>',
       signatureHelp:
         "Gönderilen her teklif e-postasının sonuna bu imza otomatik olarak eklenir. HTML etiketleri desteklenir. \"İmzaya Görsel Ekle\" ile logo/banner yükleyebilirsiniz.",
+      openaiApiKey: "OpenAI API Anahtarı (Çeviri)",
+      openaiApiKeyHelp:
+        "Teklif PDF'i çevirisi (Almanca/Türkçe) için kullanılır. Anahtarınızı platform.openai.com adresinden alabilirsiniz. Güvenli şekilde saklanır ve PDF'te asla görünmez.",
       defaultValidity: "Varsayılan Geçerlilik (gün)",
       defaultQuoteNotes: "Varsayılan Teklif Notları",
       defaultQuoteNotesPlaceholder: "Ödeme koşulları, teslimat süresi, garanti…",

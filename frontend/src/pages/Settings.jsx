@@ -234,6 +234,12 @@ export default function Settings() {
                   <Textarea rows={6} value={form.email_signature_html || ""} onChange={(e) => set("email_signature_html", e.target.value)} placeholder={t("settings.signaturePlaceholder")} data-testid="settings-email-signature" />
                   <p className="text-xs text-zinc-500 mt-2">{t("settings.signatureHelp")}</p>
                 </div>
+
+                <div className="pt-4 border-t border-zinc-100">
+                  <Label>{t("settings.openaiApiKey")}</Label>
+                  <Input type="password" value={form.openai_api_key || ""} onChange={(e) => set("openai_api_key", e.target.value)} placeholder="sk-..." className="font-mono" data-testid="settings-openai-key" />
+                  <p className="text-xs text-zinc-500 mt-2">{t("settings.openaiApiKeyHelp")}</p>
+                </div>
               </div>
             </TabsContent>
 

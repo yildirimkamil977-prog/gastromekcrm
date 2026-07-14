@@ -58,6 +58,9 @@ def build_translate_router(db):
             return {"translations": texts}
 
         api_key = os.environ.get("OPENAI_API_KEY")
+        settings = await db.settings.find_one({"key": "company"}, {"openai_api_key": 1})
+        if settings and (settings.get("openai_api_key") or "").strip():
+            api_key = settings["openai_api_key"].strip()
         if not api_key:
             raise HTTPException(status_code=500, detail="Çeviri servisi yapılandırılmamış")
 
