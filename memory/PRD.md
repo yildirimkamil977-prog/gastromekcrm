@@ -1,3 +1,11 @@
+## Round 18 — OpenAI key in Settings + translation VERIFIED working (2026-07-14)
+- User added billing to their OpenAI key → translation now works (curl: DE↔TR correct, codes/units preserved).
+- Added OpenAI API key field to Settings (Ayarlar → E-posta tab, data-testid=settings-openai-key, password). Backend CompanySettings.openai_api_key added; sanitized (hidden) for non-admin roles. Saved via the existing single PUT /api/settings.
+- translate.py now prefers the settings-DB key, falls back to env OPENAI_API_KEY.
+- Verified 100% (iteration_14, 6/6): settings field present+saveable; both PDF İndir & Fiyatsız İndir dropdowns (🇹🇷/🇩🇪) translate + download end-to-end (files Angebot-<no>-DE.pdf / -TR-ohne-Preise.pdf), zero console errors. Round-trip curl: settings key saved (len 164) → translate uses it.
+- DEPLOY NOTE: on the live server, set OPENAI_API_KEY in deployment/.env OR enter the key via Settings UI (stored in DB) after deploy — the key is NOT in git.
+
+
 ## Round 17 — Quote PDF language download (TR/DE translation) (2026-07-14)
 - Quote view: "PDF İndir" and "Fiyatsız Olarak İndir" are now dropdowns with flag options 🇹🇷 Türkçe / 🇩🇪 Almanca. Selecting a language translates ALL dynamic quote content (item title/description/features, notes) to the target language and downloads a PDF whose static labels are also forced to that language.
 - Backend: new POST /api/translate {target_lang, texts[]} using the USER'S OWN OpenAI key (OPENAI_API_KEY in backend/.env) via emergentintegrations LlmChat + gpt-4o-mini. Keeps codes/numbers/units unchanged; graceful fallback returns originals on parse mismatch; 400 on invalid lang; empty texts skip the LLM.
