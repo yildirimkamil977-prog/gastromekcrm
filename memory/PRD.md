@@ -1,3 +1,8 @@
+## Round 19 — Include company tagline in quote translation (2026-07-14)
+- User noted the header tagline ("Industrielle Küchenausstattung") wasn't translated. Fixed: collectTexts/applyTranslations now also translate company.tagline; the hidden translated template receives the translated company object. Company name/address/contact + customer data intentionally left untranslated.
+- Verified via curl: 'Industrielle Küchenausstattung' → 'Endüstriyel Mutfak Ekipmanları'; already-Turkish 'Özel Kalem' preserved. Frontend compiles. Download pipeline unchanged (verified iteration_14).
+
+
 ## Round 18 — OpenAI key in Settings + translation VERIFIED working (2026-07-14)
 - User added billing to their OpenAI key → translation now works (curl: DE↔TR correct, codes/units preserved).
 - Added OpenAI API key field to Settings (Ayarlar → E-posta tab, data-testid=settings-openai-key, password). Backend CompanySettings.openai_api_key added; sanitized (hidden) for non-admin roles. Saved via the existing single PUT /api/settings.

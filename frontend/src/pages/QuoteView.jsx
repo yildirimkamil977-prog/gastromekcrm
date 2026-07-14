@@ -156,8 +156,8 @@ export default function QuoteView() {
     }
   };
 
-  // Collect translatable strings from the quote into a flat list + a map to rebuild.
-  const collectTexts = (q) => {
+  // Collect translatable strings from the quote (+ company tagline) into a flat list + a map to rebuild.
+  const collectTexts = (q, comp) => {
     const texts = [], map = [];
     (q.items || []).forEach((it, i) => {
       texts.push(it.title || ""); map.push(["title", i]);
@@ -165,29 +165,32 @@ export default function QuoteView() {
       (it.features || []).forEach((f, fi) => { texts.push(f || ""); map.push(["feature", i, fi]); });
     });
     texts.push(q.notes || ""); map.push(["notes"]);
+    if (comp?.tagline) { texts.push(comp.tagline); map.push(["company_tagline"]); }
     return { texts, map };
   };
 
-  const applyTranslations = (q, map, translations) => {
+  const applyTranslations = (q, comp, map, translations) => {
     const copy = JSON.parse(JSON.stringify(q));
+    const compCopy = comp ? JSON.parse(JSON.stringify(comp)) : comp;
     translations.forEach((tr, idx) => {
       const m = map[idx];
       if (m[0] === "title") copy.items[m[1]].title = tr;
       else if (m[0] === "description") copy.items[m[1]].description = tr;
       else if (m[0] === "feature") copy.items[m[1]].features[m[2]] = tr;
       else if (m[0] === "notes") copy.notes = tr;
+      else if (m[0] === "company_tagline" && compCopy) compCopy.tagline = tr;
     });
-    return copy;
+    return { quote: copy, company: compCopy };
   };
 
   const downloadTranslated = async (targetLang, priceless = false) => {
     setGenerating(true);
     try {
-      const { texts, map } = collectTexts(quote);
+      const { texts, map } = collectTexts(quote, company);
       const r = await api.post("/translate", { target_lang: targetLang, texts });
       const translations = r.data.translations || texts;
-      const tq = applyTranslations(quote, map, translations);
-      setTranslated({ quote: tq, lang: targetLang, priceless });
+      const { quote: tq, company: tCompany } = applyTranslations(quote, company, map, translations);
+      setTranslated({ quote: tq, company: tCompany, lang: targetLang, priceless });
       // wait for the hidden template to render
       await new Promise((res) => setTimeout(res, 500));
       const pdf = await generatePdf("quote-pdf-root-translated");
@@ -416,7 +419,7 @@ export default function QuoteView() {
           {/* Hidden translated template — rendered on demand for language-specific PDF export */}
           {translated && (
             <div aria-hidden="true" style={{ position: "absolute", left: "-99999px", top: 0, width: "210mm" }}>
-              <QuotePDFTemplate quote={translated.quote} customer={customer} company={company} lang={translated.lang} priceless={translated.priceless} rootId="quote-pdf-root-translated" />
+              <QuotePDFTemplate quote={translated.quote} customer={customer} company={translated.company || company} lang={translated.lang} priceless={translated.priceless} rootId="quote-pdf-root-translated" />
             </div>
           )}
         </div>
