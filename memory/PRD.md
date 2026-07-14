@@ -1,3 +1,11 @@
+## Round 17 — Quote PDF language download (TR/DE translation) (2026-07-14)
+- Quote view: "PDF İndir" and "Fiyatsız Olarak İndir" are now dropdowns with flag options 🇹🇷 Türkçe / 🇩🇪 Almanca. Selecting a language translates ALL dynamic quote content (item title/description/features, notes) to the target language and downloads a PDF whose static labels are also forced to that language.
+- Backend: new POST /api/translate {target_lang, texts[]} using the USER'S OWN OpenAI key (OPENAI_API_KEY in backend/.env) via emergentintegrations LlmChat + gpt-4o-mini. Keeps codes/numbers/units unchanged; graceful fallback returns originals on parse mismatch; 400 on invalid lang; empty texts skip the LLM.
+- Frontend: QuotePDFTemplate gained `lang` prop (createTranslator from LanguageContext); hidden #quote-pdf-root-translated rendered on demand; generatePdf(rootId) shared. i18n keys quoteView.langTurkish/langGerman/translateError.
+- Verified via curl: routing/auth OK, empty→originals (200), invalid lang→400. Compiles clean.
+- ⚠️ BLOCKER (NOT a code issue): the user's provided OpenAI key returns RateLimitError "exceeded your current quota". Translation download will only work once the key has billing/credits, OR switch to Emergent Universal key. Feature is otherwise complete & ready.
+
+
 ## Round 16 — Editable expense total debt (2026-07-01)
 - In the expense detail dialog (ProjeDetay), the "Toplam Borç / Gesamtschuld" (total debt) card is now editable: pencil (edit-debt-btn) → inline input (edit-debt-input) + save (save-debt-btn) / cancel (cancel-debt-btn). Saving PUTs total_debt and the "Kalan/Offen" remaining recalculates.
 - i18n: projects.expenseUpdated (DE 'Ausgabe aktualisiert' / TR 'Gider güncellendi'). Backend PUT /projects/{id}/expenses/{eid} already supported total_debt.

@@ -16,7 +16,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import {
-  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, FileDown,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "../components/ui/dropdown-menu";
+import {
+  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, FileDown, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +35,7 @@ export default function QuoteView() {
   const [loading, setLoading] = useState(true);
   const pdfRef = useRef(null);
   const [generating, setGenerating] = useState(false);
+  const [translated, setTranslated] = useState(null);
 
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailTo, setEmailTo] = useState("");
@@ -152,21 +156,48 @@ export default function QuoteView() {
     }
   };
 
-  const downloadPdf = async () => {
-    try {
-      const pdf = await generatePdf();
-      pdf.save(`${t("quoteView.pdfFilePrefix")}-${quote.quote_no}.pdf`);
-    } catch (e) {
-      toast.error(t("quoteView.pdfError") + e.message);
-    }
+  // Collect translatable strings from the quote into a flat list + a map to rebuild.
+  const collectTexts = (q) => {
+    const texts = [], map = [];
+    (q.items || []).forEach((it, i) => {
+      texts.push(it.title || ""); map.push(["title", i]);
+      texts.push(it.description || ""); map.push(["description", i]);
+      (it.features || []).forEach((f, fi) => { texts.push(f || ""); map.push(["feature", i, fi]); });
+    });
+    texts.push(q.notes || ""); map.push(["notes"]);
+    return { texts, map };
   };
 
-  const downloadPricelessPdf = async () => {
+  const applyTranslations = (q, map, translations) => {
+    const copy = JSON.parse(JSON.stringify(q));
+    translations.forEach((tr, idx) => {
+      const m = map[idx];
+      if (m[0] === "title") copy.items[m[1]].title = tr;
+      else if (m[0] === "description") copy.items[m[1]].description = tr;
+      else if (m[0] === "feature") copy.items[m[1]].features[m[2]] = tr;
+      else if (m[0] === "notes") copy.notes = tr;
+    });
+    return copy;
+  };
+
+  const downloadTranslated = async (targetLang, priceless = false) => {
+    setGenerating(true);
     try {
-      const pdf = await generatePdf("quote-pdf-root-priceless");
-      pdf.save(`${t("quoteView.pdfFilePrefix")}-${quote.quote_no}-${t("quoteView.pricelessSuffix")}.pdf`);
+      const { texts, map } = collectTexts(quote);
+      const r = await api.post("/translate", { target_lang: targetLang, texts });
+      const translations = r.data.translations || texts;
+      const tq = applyTranslations(quote, map, translations);
+      setTranslated({ quote: tq, lang: targetLang, priceless });
+      // wait for the hidden template to render
+      await new Promise((res) => setTimeout(res, 500));
+      const pdf = await generatePdf("quote-pdf-root-translated");
+      const suffix = priceless ? `-${t("quoteView.pricelessSuffix")}` : "";
+      pdf.save(`${t("quoteView.pdfFilePrefix")}-${quote.quote_no}-${targetLang.toUpperCase()}${suffix}.pdf`);
     } catch (e) {
-      toast.error(t("quoteView.pdfError") + e.message);
+      toast.error(t("quoteView.translateError") + (e.response?.data?.detail || e.message || ""));
+    } finally {
+      setGenerating(false);
+      setTranslated(null);
     }
   };
 
@@ -270,14 +301,41 @@ export default function QuoteView() {
         <Link to={`/teklifler/${id}/duzenle`}>
           <Button variant="outline" data-testid="edit-quote-btn"><Pencil size={14} strokeWidth={1.5} className="mr-2" /> {t("common.edit")}</Button>
         </Link>
-        <Button onClick={downloadPdf} disabled={generating} className="bg-brand hover:bg-brand-hover text-white" data-testid="download-pdf-btn">
-          {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Download size={14} strokeWidth={1.5} className="mr-2" />}
-          {t("quoteView.downloadPdf")}
-        </Button>
-        <Button onClick={downloadPricelessPdf} disabled={generating} variant="outline" className="border-brand/40 text-brand hover:bg-brand-light" data-testid="download-priceless-pdf-btn">
-          {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <FileDown size={14} strokeWidth={1.5} className="mr-2" />}
-          {t("quoteView.downloadPricelessPdf")}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button disabled={generating} className="bg-brand hover:bg-brand-hover text-white" data-testid="download-pdf-btn">
+              {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Download size={14} strokeWidth={1.5} className="mr-2" />}
+              {t("quoteView.downloadPdf")}
+              <ChevronDown size={14} className="ml-2 opacity-80" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44">
+            <DropdownMenuItem onClick={() => downloadTranslated("tr", false)} data-testid="download-pdf-tr">
+              <span className="mr-2 text-base leading-none">🇹🇷</span> {t("quoteView.langTurkish")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => downloadTranslated("de", false)} data-testid="download-pdf-de">
+              <span className="mr-2 text-base leading-none">🇩🇪</span> {t("quoteView.langGerman")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button disabled={generating} variant="outline" className="border-brand/40 text-brand hover:bg-brand-light" data-testid="download-priceless-pdf-btn">
+              {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <FileDown size={14} strokeWidth={1.5} className="mr-2" />}
+              {t("quoteView.downloadPricelessPdf")}
+              <ChevronDown size={14} className="ml-2 opacity-80" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44">
+            <DropdownMenuItem onClick={() => downloadTranslated("tr", true)} data-testid="download-priceless-tr">
+              <span className="mr-2 text-base leading-none">🇹🇷</span> {t("quoteView.langTurkish")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => downloadTranslated("de", true)} data-testid="download-priceless-de">
+              <span className="mr-2 text-base leading-none">🇩🇪</span> {t("quoteView.langGerman")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button variant="outline" onClick={() => window.print()} data-testid="print-btn"><Printer size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.print")}</Button>
 
         <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
@@ -354,6 +412,13 @@ export default function QuoteView() {
           <div aria-hidden="true" style={{ position: "absolute", left: "-99999px", top: 0, width: "210mm" }}>
             <QuotePDFTemplate quote={quote} customer={customer} company={company} priceless rootId="quote-pdf-root-priceless" />
           </div>
+
+          {/* Hidden translated template — rendered on demand for language-specific PDF export */}
+          {translated && (
+            <div aria-hidden="true" style={{ position: "absolute", left: "-99999px", top: 0, width: "210mm" }}>
+              <QuotePDFTemplate quote={translated.quote} customer={customer} company={company} lang={translated.lang} priceless={translated.priceless} rootId="quote-pdf-root-translated" />
+            </div>
+          )}
         </div>
 
         {/* Meta sidebar */}

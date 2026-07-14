@@ -11,6 +11,23 @@ function getNested(obj, path) {
   return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
 }
 
+// Standalone translator for a fixed language (used e.g. to render a PDF in a
+// forced language regardless of the active UI language).
+export function createTranslator(lang) {
+  const useLang = LANGS.includes(lang) ? lang : DEFAULT_LANG;
+  return (key, vars) => {
+    let str = getNested(translations[useLang], key);
+    if (str == null) str = getNested(translations[DEFAULT_LANG], key);
+    if (str == null) return key;
+    if (vars && typeof str === "string") {
+      Object.entries(vars).forEach(([k, v]) => {
+        str = str.replace(new RegExp(`\\{${k}\\}`, "g"), v);
+      });
+    }
+    return str;
+  };
+}
+
 export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState(() => {
     const stored = localStorage.getItem(STORAGE_KEY);

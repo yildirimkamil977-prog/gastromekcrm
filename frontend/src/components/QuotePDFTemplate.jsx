@@ -1,6 +1,6 @@
 import React from "react";
 import { formatDate, formatMoney, API_URL } from "../lib/api";
-import { useT } from "../i18n/LanguageContext";
+import { useT, createTranslator } from "../i18n/LanguageContext";
 
 /**
  * Image with automatic proxy fallback.
@@ -30,8 +30,9 @@ function SafeImg({ src, style, alt = "" }) {
  * Keeps itself print-friendly; uses inline styles for html2canvas reliability.
  * Text content is localized via the active language (German default / Turkish).
  */
-export default function QuotePDFTemplate({ quote, customer, company, priceless = false, rootId = "quote-pdf-root" }) {
-  const { t } = useT();
+export default function QuotePDFTemplate({ quote, customer, company, priceless = false, rootId = "quote-pdf-root", lang = null }) {
+  const ctx = useT();
+  const t = lang ? createTranslator(lang) : ctx.t;
   const {
     quote_no, issue_date, valid_until, currency, items = [],
     subtotal = 0, vat_amount = 0, vat_rate = 0,
