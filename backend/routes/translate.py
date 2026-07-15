@@ -12,7 +12,7 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 
 from auth import get_current_user_from_request
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from openai import AsyncOpenAI
 
 logger = logging.getLogger("translate")
 
@@ -72,14 +72,17 @@ def build_translate_router(db):
             "if an item is an empty string, return an empty string in the same position. "
             "Return ONLY a valid JSON object of the exact form {\"items\": [...]} with the translated strings and nothing else."
         )
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"quote-translate-{body.target_lang}",
-            system_message=system,
-        ).with_model("openai", "gpt-4o-mini")
-
+        chat_client = AsyncOpenAI(api_key=api_key)
         try:
-            resp = await chat.send_message(UserMessage(text=json.dumps({"items": texts}, ensure_ascii=False)))
+            completion = await chat_client.chat.completions.create(
+                model="gpt-4o-mini",
+                temperature=0,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": json.dumps({"items": texts}, ensure_ascii=False)},
+                ],
+            )
+            resp = completion.choices[0].message.content
         except Exception as e:  # noqa: BLE001
             logger.error(f"Translation failed: {e}")
             raise HTTPException(status_code=502, detail="Çeviri sırasında bir hata oluştu")
