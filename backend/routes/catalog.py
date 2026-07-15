@@ -251,9 +251,14 @@ def build_catalog_router(db):
                        "category": p.get("product_type", "")}
             system = (
                 "You are a professional translator for an industrial kitchen equipment e-commerce store. "
-                "Translate the values of title, description and category into German (Deutsch). "
-                "Keep product codes, GTIN/MPN, numbers, dimensions and units (cm, mm, m, kg, g, W, kW, V, A, L, °C, Ø, %), "
-                "brand and model names UNCHANGED. Return ONLY valid JSON of the exact form "
+                "Translate the values of title, description and category from Turkish into German (Deutsch). "
+                "IMPORTANT — the TITLE is a product name: you MUST translate all descriptive/common words in it "
+                "(product type, material, colour, size words, features) into German. Keep ONLY the brand name "
+                "(e.g. 'Arıgastro', 'Kumtel') and alphanumeric model/product codes UNCHANGED. Never return the "
+                "title identical to the input unless it consists solely of a brand name and codes. "
+                "Example: 'Arıgastro Kahve Posa Çekmecesi Siyah' -> 'Arıgastro Kaffeesatzschublade Schwarz'. "
+                "In all fields keep product codes, GTIN/MPN, numbers, dimensions and units (cm, mm, m, kg, g, W, kW, V, A, L, °C, Ø, %) UNCHANGED. "
+                "Return ONLY valid JSON of the exact form "
                 "{\"title\": \"...\", \"description\": \"...\", \"category\": \"...\"}."
             )
             async with sem:

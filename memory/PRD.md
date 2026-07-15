@@ -1,3 +1,8 @@
+## Round 25 — FIX catalog title not translated (2026-06-XX)
+- BUG: on translate, description+category → German but TITLE stayed Turkish (e.g. "Arıgastro Kahve Posa Çekmecesi Siyah" unchanged). Cause: system prompt said "keep brand and model names UNCHANGED" → gpt-4o-mini treated the whole product name as a brand name.
+- FIX (routes/catalog.py translate system prompt): explicit rule — the TITLE is a product name, MUST translate descriptive/common words, keep ONLY the brand name + alphanumeric codes; added a worked example. Verified via curl: DE title now "Arıgastro Kaffeesatzschublade Schwarz".
+- NOTE: already-translated products must be re-translated to pick up the new title.
+
 ## Round 24 — Catalog currency change (single + bulk) TRY/EUR (2026-06-XX)
 - User: change catalog product currency individually and in bulk; reflect in XML & CSV. Choice: only currency LABEL changes (price number stays same); options TRY + EUR.
 - Backend (routes/catalog.py): new POST /catalog/bulk-currency {ids, currency} → validates TRY/EUR (400 else), update_many sets currency + edited=True. Individual PUT already accepts currency. Verified via curl (EUR set, invalid→400, revert TRY).
