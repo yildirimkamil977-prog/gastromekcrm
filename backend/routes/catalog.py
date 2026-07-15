@@ -72,6 +72,18 @@ def _de(p: dict, field: str) -> str:
     return (p.get(f"{field}_de") or "").strip() or (p.get(field) or "")
 
 
+def _desc_html(text: str) -> str:
+    """Convert plain-text description (with newlines) into HTML paragraphs so the
+    ikas rich-text 'Açıklama' field preserves line/section breaks instead of
+    collapsing everything into one block."""
+    from html import escape as h
+    text = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not text:
+        return ""
+    lines = [ln.strip() for ln in text.split("\n")]
+    return "".join(f"<p>{h(ln)}</p>" for ln in lines if ln)
+
+
 def build_catalog_router(db):
     router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -284,7 +296,7 @@ def build_catalog_router(db):
             row = [""] * len(CSV_HEADER)
             row[0] = p.get("id", "")
             row[2] = _de(p, "title")
-            row[3] = _de(p, "description")
+            row[3] = _desc_html(_de(p, "description"))
             row[4] = f"{p.get('price', 0)}"
             row[7] = p.get("mpn") or p.get("gtin") or ""
             row[8] = p.get("code", "")
