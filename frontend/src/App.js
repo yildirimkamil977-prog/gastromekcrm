@@ -19,6 +19,7 @@ import Users from "./pages/Users";
 import Muhasebe from "./pages/Muhasebe";
 import Projeler from "./pages/Projeler";
 import ProjeDetay from "./pages/ProjeDetay";
+import Katalog from "./pages/Katalog";
 
 function useRemoveEmergentBadge() {
   useEffect(() => {
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/musteriler" element={<Protected><Customers /></Protected>} />
                 <Route path="/musteriler/:id" element={<Protected><CustomerDetail /></Protected>} />
                 <Route path="/urunler" element={<Protected><Products /></Protected>} />
+                <Route path="/katalog" element={<Protected adminOnly><Katalog /></Protected>} />
                 <Route path="/teklifler" element={<Protected><Quotes /></Protected>} />
                 <Route path="/teklifler/yeni" element={<Protected><QuoteForm /></Protected>} />
                 <Route path="/teklifler/:id" element={<Protected><QuoteView /></Protected>} />

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users2, FileText, Package, Settings as SettingsIcon,
-  UserCog, LogOut, Calculator, FolderKanban,
+  UserCog, LogOut, Calculator, FolderKanban, Boxes,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
@@ -19,6 +19,7 @@ const mainLinks = [
 ];
 
 const adminLinks = [
+  { to: "/katalog", key: "catalog", icon: Boxes, testid: "nav-catalog" },
   { to: "/kullanicilar", key: "users", icon: UserCog, testid: "nav-users" },
   { to: "/ayarlar", key: "settings", icon: SettingsIcon, testid: "nav-settings" },
 ];

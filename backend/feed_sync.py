@@ -86,6 +86,9 @@ def parse_feed_xml(xml_bytes: bytes) -> list[dict]:
         brand = _txt(el, "brand")
         ptype = _txt(el, "product_type")
         gtin = _txt(el, "gtin")
+        mpn = _txt(el, "mpn")
+        condition = _txt(el, "condition") or "new"
+        availability = _txt(el, "availability") or "in stock"
         price_raw = _txt(el, "price")
         price, currency = _parse_price(price_raw)
 
@@ -111,6 +114,9 @@ def parse_feed_xml(xml_bytes: bytes) -> list[dict]:
             "brand": brand,
             "product_type": ptype,
             "gtin": gtin,
+            "mpn": mpn,
+            "condition": condition,
+            "availability": availability,
             "synced_at": now,
         })
     return parsed
