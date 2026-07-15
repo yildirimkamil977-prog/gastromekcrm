@@ -1,3 +1,11 @@
+## Round 22 — FIX catalog count (stale products) + answers (2026-07-14)
+- BUG: catalog showed 4193 but live feed has 2860. Cause: import copied from stale `products` collection (daily sync never deletes items removed from feed → 1333 stale accumulated).
+- FIX: /api/catalog/import now fetches the LIVE feed (fetch_feed+parse_feed_xml), upserts current items, and delete_many stale products that are no longer in feed AND edited!=True. Edited/translated products preserved across re-import.
+- Reset all test translations → clean slate: catalog=2860, translated=0, edited=0, in_export=0.
+- Verified 100% (iteration_17): count=2860 matches feed, import idempotent, edit-preservation works, /api/products (quote picker) is a separate dataset unaffected.
+- Answered user: (2) the 4 test translations were done during testing and are now cleared; (3) quote-form 'Ürün Ekle' uses `products` collection — German catalog products never appear there.
+
+
 ## Round 21 — German Catalog module (separate, non-synced) (2026-07-14)
 - New admin-only "Katalog" page (/katalog) + separate `catalog_products` collection (does NOT touch quote-form feed products in `products`; not auto-synced, so edits/translations persist).
 - Backend routes/catalog.py: GET /products (pagination + search/brand/category filters), /facets, /count, POST /import (copy from feed: new inserted, non-edited refreshed, edited preserved), PUT+DELETE+bulk-delete, POST /translate (openai gpt-4o-mini, max 20, title/description/category→DE, sets edited/translated=locked), export add/remove flags, GET /export/info, PUBLIC GET /feed/{token}.xml (Google Shopping structure, German fields, only in_export products — appendable via same link), POST /export-csv (ikas 36-col format, UTF-8 BOM).
