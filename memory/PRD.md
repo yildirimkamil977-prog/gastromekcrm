@@ -1,3 +1,12 @@
+## Round 21 — German Catalog module (separate, non-synced) (2026-07-14)
+- New admin-only "Katalog" page (/katalog) + separate `catalog_products` collection (does NOT touch quote-form feed products in `products`; not auto-synced, so edits/translations persist).
+- Backend routes/catalog.py: GET /products (pagination + search/brand/category filters), /facets, /count, POST /import (copy from feed: new inserted, non-edited refreshed, edited preserved), PUT+DELETE+bulk-delete, POST /translate (openai gpt-4o-mini, max 20, title/description/category→DE, sets edited/translated=locked), export add/remove flags, GET /export/info, PUBLIC GET /feed/{token}.xml (Google Shopping structure, German fields, only in_export products — appendable via same link), POST /export-csv (ikas 36-col format, UTF-8 BOM).
+- feed_sync.py: additively captures mpn/condition/availability.
+- Frontend Katalog.jsx: e-commerce table (checkbox/image/name/price/brand/category/actions), bulk bar (translate w/ progress chunks of 5, add/remove XML, CSV, delete), edit dialog (TR+DE fields), XML feed link with copy. Nav 'catalog' admin link + i18n (DE/TR).
+- Verified 100% (iteration_16): backend 15/15 pytest, frontend 12/12 flows incl. quote-form regression, public XML no-auth, CSV, translate progress, max-20 guard. Zero issues.
+- DEPLOY NOTE: `openai` already in requirements (round 20). After deploy, on the live site open Katalog → "Feed'den İçe Aktar" once to populate catalog_products (starts empty on prod). Public feed URL uses REACT_APP_BACKEND_URL + /api/catalog/feed/{token}.xml.
+
+
 ## Round 20 — FIX production 502: translate.py off emergentintegrations (2026-07-14)
 - BUG: after deploy, prod backend crash-looped (docker compose ps: backend Restarting) → live login 502. Cause: routes/translate.py imported emergentintegrations, which is NOT in requirements.txt → not in prod Docker image → ModuleNotFoundError → crash loop.
 - FIX: rewrote translate.py to use official `openai` AsyncOpenAI SDK (gpt-4o-mini, temperature=0, user's OPENAI_API_KEY from settings DB or env). Added `openai>=1.40.0` to requirements.txt so the prod build installs it. No emergentintegrations dependency anymore.
