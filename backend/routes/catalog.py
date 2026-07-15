@@ -21,6 +21,7 @@ from pymongo import UpdateOne, InsertOne
 
 from auth import get_current_user_from_request
 from openai import AsyncOpenAI
+from feed_sync import fetch_feed, parse_feed_xml
 
 logger = logging.getLogger("catalog")
 
@@ -126,23 +127,33 @@ def build_catalog_router(db):
         translated = await db.catalog_products.count_documents({"translated": True})
         return {"count": total, "exported": exported, "translated": translated}
 
-    # ---------- import from feed ----------
+    # ---------- import from feed (LIVE) ----------
     @router.post("/import")
     async def import_from_feed(user=Depends(admin_user)):
+        url = os.environ.get("PRODUCT_FEED_URL", "")
+        if not url:
+            raise HTTPException(status_code=500, detail="PRODUCT_FEED_URL tanımlı değil")
+        try:
+            xml_bytes = await fetch_feed(url)
+            feed_products = parse_feed_xml(xml_bytes)
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"feed fetch failed: {e}")
+            raise HTTPException(status_code=502, detail="Feed alınamadı")
+        if not feed_products:
+            raise HTTPException(status_code=502, detail="Feed'de ürün bulunamadı")
+
+        feed_ids = {p["id"] for p in feed_products if p.get("id")}
         existing = {}
         async for d in db.catalog_products.find({}, {"id": 1, "edited": 1, "_id": 0}):
             existing[d["id"]] = bool(d.get("edited"))
         now = datetime.now(timezone.utc).isoformat()
         ops = []
         added = updated = skipped = 0
-        async for p in db.products.find({}, {"_id": 0}):
+        for p in feed_products:
             pid = p.get("id")
             if not pid:
                 continue
             base = {k: p.get(k) for k in BASE_FIELDS}
-            base.setdefault("mpn", p.get("mpn", "") or p.get("gtin", ""))
-            base.setdefault("condition", p.get("condition", "new"))
-            base.setdefault("availability", p.get("availability", "in stock"))
             if pid not in existing:
                 doc = {"id": pid, **base, "title_de": "", "description_de": "",
                        "product_type_de": "", "edited": False, "translated": False,
@@ -159,8 +170,13 @@ def build_catalog_router(db):
                 ops = []
         if ops:
             await db.catalog_products.bulk_write(ops, ordered=False)
+        # remove stale products that are no longer in the feed AND were not manually edited
+        removed = await db.catalog_products.delete_many(
+            {"id": {"$nin": list(feed_ids)}, "edited": {"$ne": True}}
+        )
         total = await db.catalog_products.count_documents({})
-        return {"added": added, "updated": updated, "skipped": skipped, "total": total}
+        return {"added": added, "updated": updated, "skipped": skipped,
+                "removed": removed.deleted_count, "feed": len(feed_ids), "total": total}
 
     # ---------- edit / delete ----------
     @router.put("/products/{product_id}")

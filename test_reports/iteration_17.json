@@ -1,0 +1,32 @@
+{
+  "summary": "Verified catalog-import fix (iteration_17). All 5 targeted backend tests PASS on preview URL. GET /api/catalog/count returns {count:2860, translated:0, exported:0} — matches LIVE feed size (2860 <item> entries) and is NO LONGER 4193. POST /api/catalog/import fetches live feed directly, returns {added:0, updated:2859, skipped:1, removed:0, feed:2860, total:2860}; skipped:1 corresponds to the 1 edited product left over from iteration_16 translate test (edited=true preserved correctly). Re-running /import is idempotent (same numbers on second call). Edit-preservation verified: set title_de='TESTDE_<ts>' on a fresh product (edited flipped to true) → ran /import → product still present with title_de intact (then reverted). Separation verified: /api/products (feed/quote collection) returns 4193 flat records and is used by the quote-picker (network trace confirms GET /api/products?search=tava&limit=12) — completely separate from /api/catalog/products. FRONTEND E2E: admin login → /katalog page loads, header reads 'Deutscher Produktkatalog & XML/CSV-Export · 2860 ürün' (NOT 4193). Clean slate confirmed: XML-Feed-Link input shows '(0)' exported, zero 'DE' badges rendered on first page. /teklifler/yeni renders normally, 'Produkt hinzufügen' opens the shadcn popover picker; typing 'tava' triggers GET /api/products?search=tava (NOT /api/catalog), returns Turkish feed product names — catalog module has no effect on the quote picker as designed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_catalog_import_fix.py",
+    "/app/test_reports/pytest/catalog_import_fix.xml",
+    "/app/backend/tests/test_catalog.py"
+  ],
+  "action_items": [
+    "(Out-of-scope but worth noting) The `products` collection (used by /api/products and the Dashboard 'Produkte (aus Feed)' widget) still contains 4193 records while the live feed only has 2860 — so 1333 stale products persist there and Dashboard shows '4193 Produkte (aus Feed)'. The current fix only cleans catalog_products. If desired, feed_sync.sync_products should mirror the new catalog behaviour and delete_many({id: {$nin: feed_ids}}) after upsert. Not part of this review request; report as observation only."
+  ],
+  "critical_code_review_comments": [
+    "routes/catalog.py /import: cleanup uses delete_many({id: {$nin: list(feed_ids)}, edited: {$ne: True}}) — correctly preserves manually edited entries (edited:true). Good.",
+    "routes/catalog.py /import: existing map only reads {id, edited} — memory-efficient. For 2860 items this is fine (~50KB).",
+    "routes/catalog.py /import: no MongoDB _id leakage in response (returns aggregated counts only). Good.",
+    "routes/catalog.py /import: bulk_write chunks at 500 ops — safe under Mongo's 100k batch limit.",
+    "OBSERVATION: feed_sync.sync_products (daily scheduler on /api/products collection) does NOT prune stale entries — that is why /api/products still has 4193 items despite feed having 2860. Same pattern as the catalog bug that was just fixed. Consider applying the same delete_many({id:{$nin:feed_ids}}) treatment to the products collection if the Dashboard 'aus Feed' number matters."
+  ],
+  "updated_files": ["/app/backend/tests/test_catalog_import_fix.py"],
+  "success_rate": {"backend": "100% (5/5 new + all existing catalog tests still valid)", "frontend": "100% (katalog count, clean slate, quote picker separation)"},
+  "test_credentials": "admin@arigastro.com / admin123",
+  "seed_data_creation": "During edit-preservation test set title_de='TESTDE_<epoch>' on 1 product then reverted title_de back to its original empty value. Note that PUT sets edited=true and reverting title_de does not unset edited — this is acceptable per test guidelines and matches iteration_16 behavior. Net effect: the same 1 product that was already edited=true (iteration_16 translate) is still the only edited product; catalog counts unchanged.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Katalog import fix is verified. Live feed=2860, catalog count=2860. If the Dashboard 'Produkte (aus Feed)' still needs to match the feed, that requires touching feed_sync.sync_products to also delete stale products — separate task. When re-testing, prefer /app/backend/tests/test_catalog_import_fix.py + existing test_catalog.py; both auth via Bearer token from access_token in login response body (cookie was flaky with requests.Session over HTTPS/Secure).",
+  "rca of the issue": "Root cause of the original 4193 bug was: /api/catalog/import previously copied from the stale `products` collection (which itself is not pruned by feed_sync.sync_products). Fix (verified): /api/catalog/import now calls fetch_feed(PRODUCT_FEED_URL) + parse_feed_xml directly, then upserts by feed id AND delete_many({id:{$nin:feed_ids}, edited:{$ne:True}}) to drop products no longer in the feed — while preserving admin-edited entries. Result: catalog now perfectly mirrors the live feed (2860) plus any manually-edited legacy entries."
+}
