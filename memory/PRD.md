@@ -1,3 +1,10 @@
+## Round 20 — FIX production 502: translate.py off emergentintegrations (2026-07-14)
+- BUG: after deploy, prod backend crash-looped (docker compose ps: backend Restarting) → live login 502. Cause: routes/translate.py imported emergentintegrations, which is NOT in requirements.txt → not in prod Docker image → ModuleNotFoundError → crash loop.
+- FIX: rewrote translate.py to use official `openai` AsyncOpenAI SDK (gpt-4o-mini, temperature=0, user's OPENAI_API_KEY from settings DB or env). Added `openai>=1.40.0` to requirements.txt so the prod build installs it. No emergentintegrations dependency anymore.
+- Verified (iteration_15): backend 8/8 pytest, frontend 100% (login + DE/TR translated PDF downloads + customers regression), zero critical issues. Curl: /api/translate 200 with correct TR↔DE output.
+- ACTION: user must redeploy prod (git pull + docker compose up -d --build) to pick up the fix.
+
+
 ## Round 19 — Include company tagline in quote translation (2026-07-14)
 - User noted the header tagline ("Industrielle Küchenausstattung") wasn't translated. Fixed: collectTexts/applyTranslations now also translate company.tagline; the hidden translated template receives the translated company object. Company name/address/contact + customer data intentionally left untranslated.
 - Verified via curl: 'Industrielle Küchenausstattung' → 'Endüstriyel Mutfak Ekipmanları'; already-Turkish 'Özel Kalem' preserved. Frontend compiles. Download pipeline unchanged (verified iteration_14).
