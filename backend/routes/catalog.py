@@ -292,6 +292,8 @@ def build_catalog_router(db):
             row[10] = p.get("brand", "")
             row[11] = _de(p, "product_type")
             row[13] = p.get("image", "")
+            row[32] = "VISIBLE"   # Satış Kanalı:gastromek (ikas: VISIBLE/HIDDEN/PASSIVE)
+            row[35] = "true"      # Varyant Aktiflik
             w.writerow(row)
         return Response(
             content=buf.getvalue().encode("utf-8"),
