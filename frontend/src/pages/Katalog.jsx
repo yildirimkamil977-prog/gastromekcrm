@@ -10,13 +10,16 @@ import { Badge } from "../components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../components/ui/command";
+import { cn } from "../lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "../components/ui/dialog";
 import Pagination from "../components/Pagination";
 import {
   Search, Trash2, Pencil, Languages, FileCode2, FileSpreadsheet, DownloadCloud,
-  Loader2, Boxes, Copy, Check, X, ImageOff,
+  Loader2, Boxes, Copy, Check, X, ImageOff, ChevronsUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +32,7 @@ const L = {
     title: "Katalog", subtitle: "Almanca ürün kataloğu ve XML/CSV dışa aktarım",
     import: "Feed'den İçe Aktar", importing: "İçe aktarılıyor…",
     search: "İsim, kod, marka ara…", allBrands: "Tüm Markalar", allCats: "Tüm Kategoriler",
+    searchCat: "Kategori ara…",
     product: "Ürün", price: "Fiyat", brand: "Marka", category: "Kategori", actions: "İşlem",
     selected: "seçili", delete: "Sil", translate: "Almancaya Çevir",
     addXml: "XML'e Ekle", removeXml: "XML'den Çıkar", csv: "CSV İndir",
@@ -46,6 +50,7 @@ const L = {
     title: "Katalog", subtitle: "Deutscher Produktkatalog & XML/CSV-Export",
     import: "Aus Feed importieren", importing: "Importiere…",
     search: "Name, Code, Marke suchen…", allBrands: "Alle Marken", allCats: "Alle Kategorien",
+    searchCat: "Kategorie suchen…",
     product: "Produkt", price: "Preis", brand: "Marke", category: "Kategorie", actions: "Aktion",
     selected: "ausgewählt", delete: "Löschen", translate: "Ins Deutsche übersetzen",
     addXml: "Zu XML", removeXml: "Aus XML", csv: "CSV",
@@ -60,6 +65,48 @@ const L = {
     emptyHint: "Katalog ist leer. Klicken Sie auf \"Aus Feed importieren\".",
   },
 };
+
+function CategoryCombobox({ value, options, onChange, tx }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const filtered = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    const list = t ? options.filter((c) => c.toLowerCase().includes(t)) : options;
+    return list.slice(0, 200);
+  }, [q, options]);
+  const label = value || tx.allCats;
+  const shortLabel = value ? (value.split(">").pop() || value).trim() : tx.allCats;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-64 justify-between font-normal" data-testid="catalog-category-filter" title={label}>
+          <span className="truncate">{shortLabel}</span>
+          <ChevronsUpDown size={14} className="ml-2 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[380px] p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput placeholder={tx.searchCat} value={q} onValueChange={setQ} data-testid="catalog-category-search" />
+          <CommandList className="max-h-80">
+            <CommandEmpty>{tx.none}</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="__all__" onSelect={() => { onChange(""); setOpen(false); }} data-testid="catalog-cat-opt-all">
+                <Check size={14} className={cn("mr-2", !value ? "opacity-100 text-brand" : "opacity-0")} />
+                {tx.allCats}
+              </CommandItem>
+              {filtered.map((c) => (
+                <CommandItem key={c} value={c} onSelect={() => { onChange(c); setOpen(false); }} className="whitespace-normal leading-snug">
+                  <Check size={14} className={cn("mr-2 mt-0.5 shrink-0", value === c ? "opacity-100 text-brand" : "opacity-0")} />
+                  <span className="text-xs">{c}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function Katalog() {
   const { lang } = useT();
@@ -227,13 +274,7 @@ export default function Katalog() {
             {facets.brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={category || "all"} onValueChange={(v) => { setCategory(v === "all" ? "" : v); setPage(1); }}>
-          <SelectTrigger className="w-56" data-testid="catalog-category-filter"><SelectValue placeholder={tx.allCats} /></SelectTrigger>
-          <SelectContent className="max-h-72">
-            <SelectItem value="all">{tx.allCats}</SelectItem>
-            {facets.categories.map((c) => <SelectItem key={c} value={c}>{c.length > 40 ? c.slice(0, 40) + "…" : c}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <CategoryCombobox value={category} options={facets.categories} onChange={(v) => { setCategory(v); setPage(1); }} tx={tx} />
       </div>
 
       {/* Bulk action bar */}
@@ -284,7 +325,7 @@ export default function Katalog() {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       {p.code && <span className="text-[11px] text-zinc-400">{p.code}</span>}
                       {p.translated && <Badge className="bg-brand/15 text-brand hover:bg-brand/15 text-[10px] px-1.5 py-0">DE</Badge>}
-                      {p.in_export && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-600">{tx.inExport}</Badge>}
+                      {p.in_export && <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-[10px] px-1.5 py-0 gap-0.5"><FileCode2 size={9} />XML</Badge>}
                     </div>
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums text-zinc-700">{formatMoney(p.price, p.currency)}</td>

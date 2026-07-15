@@ -109,7 +109,9 @@ def build_catalog_router(db):
             q["product_type"] = {"$regex": category, "$options": "i"}
         total = await db.catalog_products.count_documents(q)
         skip = (page - 1) * page_size
-        items = await db.catalog_products.find(q, {"_id": 0}).sort("title", 1).skip(skip).limit(page_size).to_list(page_size)
+        items = await db.catalog_products.find(q, {"_id": 0}).sort(
+            [("in_export", -1), ("translated", -1), ("title", 1)]
+        ).skip(skip).limit(page_size).to_list(page_size)
         return {"items": items, "total": total, "page": page, "page_size": page_size}
 
     @router.get("/facets")
