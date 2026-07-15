@@ -1,6 +1,14 @@
-## Round 23 — FIX ikas CSV import error (Satış Kanalı) (2026-06-XX)
-- BUG: User exported catalog CSV → ikas import rejected every row with "Satış Kanalı: Lütfen geçerli bir değer giriniz. Geçerli değerler :VISIBLE,HIDDEN,PASSIVE". Cause: export-csv left the "Satış Kanalı:gastromek" column (index 32) empty; ikas requires VISIBLE/HIDDEN/PASSIVE.
-- FIX (routes/catalog.py export_csv): row[32]="VISIBLE", row[35]="true" (Varyant Aktiflik). Verified via curl: exported CSV now has Satış Kanalı=VISIBLE, Varyant Aktiflik=true.
+## Round 24 — Catalog currency change (single + bulk) TRY/EUR (2026-06-XX)
+- User: change catalog product currency individually and in bulk; reflect in XML & CSV. Choice: only currency LABEL changes (price number stays same); options TRY + EUR.
+- Backend (routes/catalog.py): new POST /catalog/bulk-currency {ids, currency} → validates TRY/EUR (400 else), update_many sets currency + edited=True. Individual PUT already accepts currency. Verified via curl (EUR set, invalid→400, revert TRY).
+- Frontend (Katalog.jsx): bulk bar currency Select (data-testid=catalog-bulk-currency), edit dialog currency Select (data-testid=edit-currency), saveEdit sends currency. i18n DE/TR.
+- XML feed <g:price> already outputs {price}{currency} → reflects change automatically.
+- NOTE: ikas CSV (36-col) has NO per-product currency column (store-level currency); CSV price stays numeric. Currency is carried by the XML feed.
+
+## Round 23 — FIX ikas CSV import errors (Satış Kanalı + Açıklama HTML) (2026-06-XX)
+- BUG1: ikas rejected rows with "Satış Kanalı: geçerli değerler VISIBLE,HIDDEN,PASSIVE". FIX: export_csv row[32]="VISIBLE", row[35]="true".
+- BUG2: product descriptions collapsed into one block in ikas (HTML field ignored \n). FIX: _desc_html() wraps each line in <p>...</p> (html-escaped). Verified via curl.
+
 
 ## Round 22 — FIX catalog count (stale products) + answers (2026-07-14)
 - BUG: catalog showed 4193 but live feed has 2860. Cause: import copied from stale `products` collection (daily sync never deletes items removed from feed → 1333 stale accumulated).

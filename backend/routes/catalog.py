@@ -215,6 +215,22 @@ def build_catalog_router(db):
         res = await db.catalog_products.delete_many({"id": {"$in": body.ids}})
         return {"deleted": res.deleted_count}
 
+    class CurrencyBody(BaseModel):
+        ids: List[str]
+        currency: str
+
+    @router.post("/bulk-currency")
+    async def bulk_currency(body: CurrencyBody, user=Depends(admin_user)):
+        cur = (body.currency or "").upper()
+        if cur not in ("TRY", "EUR"):
+            raise HTTPException(status_code=400, detail="Geçersiz para birimi")
+        now = datetime.now(timezone.utc).isoformat()
+        res = await db.catalog_products.update_many(
+            {"id": {"$in": body.ids}},
+            {"$set": {"currency": cur, "edited": True, "updated_at": now}},
+        )
+        return {"updated": res.modified_count, "currency": cur}
+
     # ---------- translate ----------
     @router.post("/translate")
     async def translate(body: IdsBody, user=Depends(admin_user)):

@@ -34,6 +34,8 @@ const L = {
     search: "İsim, kod, marka ara…", allBrands: "Tüm Markalar", allCats: "Tüm Kategoriler",
     searchCat: "Kategori ara…",
     product: "Ürün", price: "Fiyat", brand: "Marka", category: "Kategori", actions: "İşlem",
+    currency: "Para Birimi", setCurrency: "Para Birimi",
+    currencyDone: "Para birimi güncellendi",
     selected: "seçili", delete: "Sil", translate: "Almancaya Çevir",
     addXml: "XML'e Ekle", removeXml: "XML'den Çıkar", csv: "CSV İndir",
     edit: "Düzenle", save: "Kaydet", cancel: "İptal",
@@ -52,6 +54,8 @@ const L = {
     search: "Name, Code, Marke suchen…", allBrands: "Alle Marken", allCats: "Alle Kategorien",
     searchCat: "Kategorie suchen…",
     product: "Produkt", price: "Preis", brand: "Marke", category: "Kategorie", actions: "Aktion",
+    currency: "Währung", setCurrency: "Währung",
+    currencyDone: "Währung aktualisiert",
     selected: "ausgewählt", delete: "Löschen", translate: "Ins Deutsche übersetzen",
     addXml: "Zu XML", removeXml: "Aus XML", csv: "CSV",
     edit: "Bearbeiten", save: "Speichern", cancel: "Abbrechen",
@@ -211,6 +215,15 @@ export default function Katalog() {
     catch (e) { toast.error(formatApiError(e)); }
   };
 
+  const bulkCurrency = async (currency) => {
+    if (!selectedIds.length || !currency) return;
+    try {
+      await api.post("/catalog/bulk-currency", { ids: selectedIds, currency });
+      toast.success(tx.currencyDone + " ✓");
+      await load();
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
   const downloadCsv = async () => {
     if (!selectedIds.length) return;
     try {
@@ -229,7 +242,7 @@ export default function Katalog() {
         description: editing.description, description_de: editing.description_de,
         product_type: editing.product_type, product_type_de: editing.product_type_de,
         brand: editing.brand, image: editing.image, code: editing.code,
-        price: Number(editing.price) || 0,
+        price: Number(editing.price) || 0, currency: editing.currency || "TRY",
       });
       setEditing(null); await load();
     } catch (e) { toast.error(formatApiError(e)); } finally { setSaving(false); }
@@ -287,6 +300,13 @@ export default function Katalog() {
           </Button>
           <Button size="sm" variant="secondary" onClick={addToExport} data-testid="catalog-add-xml-btn"><FileCode2 size={14} className="mr-1.5" />{tx.addXml}</Button>
           <Button size="sm" variant="secondary" onClick={removeFromExport} data-testid="catalog-remove-xml-btn">{tx.removeXml}</Button>
+          <Select onValueChange={bulkCurrency}>
+            <SelectTrigger className="h-8 w-28 bg-white text-zinc-900 border-0" data-testid="catalog-bulk-currency"><SelectValue placeholder={tx.setCurrency} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TRY">₺ TRY</SelectItem>
+              <SelectItem value="EUR">€ EUR</SelectItem>
+            </SelectContent>
+          </Select>
           <Button size="sm" variant="secondary" onClick={downloadCsv} data-testid="catalog-csv-btn"><FileSpreadsheet size={14} className="mr-1.5" />{tx.csv}</Button>
           <Button size="sm" variant="destructive" onClick={bulkDelete} data-testid="catalog-bulk-delete-btn"><Trash2 size={14} className="mr-1.5" />{tx.delete}</Button>
           <Button size="sm" variant="ghost" onClick={clearSel} className="text-white hover:bg-white/10 ml-auto"><X size={14} /></Button>
@@ -366,6 +386,16 @@ export default function Katalog() {
                 <div><Label className="text-xs">{tx.brand}</Label><Input value={editing.brand || ""} onChange={(e) => setEditing({ ...editing, brand: e.target.value })} /></div>
                 <div><Label className="text-xs">{tx.code}</Label><Input value={editing.code || ""} onChange={(e) => setEditing({ ...editing, code: e.target.value })} /></div>
                 <div><Label className="text-xs">{tx.price}</Label><Input type="number" step="0.01" value={editing.price ?? ""} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></div>
+              </div>
+              <div className="w-40">
+                <Label className="text-xs">{tx.currency}</Label>
+                <Select value={editing.currency || "TRY"} onValueChange={(v) => setEditing({ ...editing, currency: v })}>
+                  <SelectTrigger data-testid="edit-currency"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRY">₺ TRY</SelectItem>
+                    <SelectItem value="EUR">€ EUR</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div><Label className="text-xs">{tx.image}</Label><Input value={editing.image || ""} onChange={(e) => setEditing({ ...editing, image: e.target.value })} /></div>
             </div>
