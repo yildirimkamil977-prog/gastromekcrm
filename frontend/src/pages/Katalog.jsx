@@ -19,7 +19,7 @@ import {
 import Pagination from "../components/Pagination";
 import {
   Search, Trash2, Pencil, Languages, FileCode2, FileSpreadsheet, DownloadCloud,
-  Loader2, Boxes, Copy, Check, X, ImageOff, ChevronsUpDown,
+  Loader2, Boxes, Copy, Check, X, ImageOff, ChevronsUpDown, Warehouse,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ const L = {
     currencyDone: "Para birimi güncellendi",
     selected: "seçili", delete: "Sil", translate: "Almancaya Çevir",
     addXml: "XML'e Ekle", removeXml: "XML'den Çıkar", csv: "CSV İndir",
+    toInventory: "Envantere Taşı",
     edit: "Düzenle", save: "Kaydet", cancel: "İptal",
     editTitle: "Ürünü Düzenle", nameTr: "İsim (TR)", nameDe: "İsim (DE)",
     descTr: "Açıklama (TR)", descDe: "Açıklama (DE)", catTr: "Kategori (TR)", catDe: "Kategori (DE)",
@@ -58,6 +59,7 @@ const L = {
     currencyDone: "Währung aktualisiert",
     selected: "ausgewählt", delete: "Löschen", translate: "Ins Deutsche übersetzen",
     addXml: "Zu XML", removeXml: "Aus XML", csv: "CSV",
+    toInventory: "In Bestand",
     edit: "Bearbeiten", save: "Speichern", cancel: "Abbrechen",
     editTitle: "Produkt bearbeiten", nameTr: "Name (TR)", nameDe: "Name (DE)",
     descTr: "Beschreibung (TR)", descDe: "Beschreibung (DE)", catTr: "Kategorie (TR)", catDe: "Kategorie (DE)",
@@ -224,6 +226,15 @@ export default function Katalog() {
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
+  const moveToInventory = async () => {
+    if (!selectedIds.length) return;
+    try {
+      const r = await api.post("/inventory/from-catalog", { ids: selectedIds });
+      toast.success(`${tx.toInventory}: +${r.data.added}`);
+      clearSel();
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
   const downloadCsv = async () => {
     if (!selectedIds.length) return;
     try {
@@ -308,6 +319,7 @@ export default function Katalog() {
             </SelectContent>
           </Select>
           <Button size="sm" variant="secondary" onClick={downloadCsv} data-testid="catalog-csv-btn"><FileSpreadsheet size={14} className="mr-1.5" />{tx.csv}</Button>
+          <Button size="sm" variant="secondary" onClick={moveToInventory} data-testid="catalog-to-inventory-btn"><Warehouse size={14} className="mr-1.5" />{tx.toInventory}</Button>
           <Button size="sm" variant="destructive" onClick={bulkDelete} data-testid="catalog-bulk-delete-btn"><Trash2 size={14} className="mr-1.5" />{tx.delete}</Button>
           <Button size="sm" variant="ghost" onClick={clearSel} className="text-white hover:bg-white/10 ml-auto"><X size={14} /></Button>
         </div>

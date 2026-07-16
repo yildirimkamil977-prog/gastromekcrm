@@ -29,6 +29,7 @@ from routes.accounting import build_accounting_router
 from routes.projects import build_projects_router
 from routes.translate import build_translate_router
 from routes.catalog import build_catalog_router
+from routes.inventory import build_inventory_router
 from feed_sync import start_daily_scheduler, sync_products
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -73,6 +74,7 @@ api_router.include_router(build_accounting_router(db))
 api_router.include_router(build_projects_router(db))
 api_router.include_router(build_translate_router(db))
 api_router.include_router(build_catalog_router(db))
+api_router.include_router(build_inventory_router(db))
 app.include_router(api_router)
 
 # CORS
