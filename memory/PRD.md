@@ -1,3 +1,10 @@
+## Round 29 — Inventory: EUR default, brand field+filter, empty-stock filter (2026-06-XX)
+- New product default currency now EUR (emptyProduct.currency='EUR'; backend create default 'EUR').
+- Added BRAND to inventory: from-catalog copies catalog brand; Add/Edit dialog brand input (inventory-brand); brand shown under name in table.
+- Brand filter (inventory-brand-filter) populated from GET /api/inventory/facets — only brands actually present in inventory appear. Facets refresh after save/delete.
+- Stock filter added 'Girilmemiş/Nicht erfasst' (empty) option → stock_status=empty matches null stock.
+- Verified via curl: brand carried (facets shows Kumtel), default EUR, empty filter, brand filter, cleanup. Frontend compiles.
+
 ## Round 28 — Inventory enhancements: code, stock warnings, sort, filters + catalog Lager badge (2026-06-XX)
 - Catalog: products already moved to inventory show a blue 'Depo/Lager' warehouse badge (catalog list annotates in_inventory via inventory_products.catalog_source_id). moveToInventory reloads list.
 - Inventory: added product CODE (Ürün Kodu/Artikelnr.) — stored, shown under name (monospace), input in Add/Edit dialog; from-catalog now copies catalog code.

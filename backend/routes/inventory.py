@@ -24,6 +24,7 @@ LOW_STOCK = 5  # threshold for "low stock" warning/filter
 class InventoryBody(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
+    brand: Optional[str] = None
     image: Optional[str] = None
     purchase_price: Optional[float] = None
     sale_price: Optional[float] = None
@@ -47,7 +48,8 @@ def build_inventory_router(db):
     @router.get("")
     async def list_products(
         search: str = Query(""),
-        stock_status: str = Query("all"),  # all | in | low | out
+        brand: str = Query(""),
+        stock_status: str = Query("all"),  # all | in | low | out | empty
         page: int = Query(1, ge=1),
         page_size: int = Query(50, ge=1, le=200),
         user=Depends(admin_user),
@@ -56,12 +58,16 @@ def build_inventory_router(db):
         if search:
             rx = {"$regex": search, "$options": "i"}
             match["$or"] = [{"name": rx}, {"code": rx}]
+        if brand:
+            match["brand"] = brand
         if stock_status == "in":
             match["stock"] = {"$gt": 0}
         elif stock_status == "low":
             match["stock"] = {"$gt": 0, "$lte": LOW_STOCK}
         elif stock_status == "out":
             match["stock"] = {"$ne": None, "$lte": 0}
+        elif stock_status == "empty":
+            match["stock"] = None
         total = await db.inventory_products.count_documents(match)
         skip = (page - 1) * page_size
         # low stock first: null stock (not yet filled) pushed to the bottom
@@ -76,6 +82,12 @@ def build_inventory_router(db):
         items = await db.inventory_products.aggregate(pipeline).to_list(page_size)
         return {"items": items, "total": total, "page": page, "page_size": page_size, "low_stock": LOW_STOCK}
 
+    @router.get("/facets")
+    async def facets(user=Depends(admin_user)):
+        brands = await db.inventory_products.distinct("brand")
+        brands = sorted([b for b in brands if b])
+        return {"brands": brands}
+
     @router.post("")
     async def create_product(body: InventoryBody, user=Depends(admin_user)):
         now = datetime.now(timezone.utc).isoformat()
@@ -83,11 +95,12 @@ def build_inventory_router(db):
             "id": uuid.uuid4().hex,
             "name": (body.name or "").strip(),
             "code": (body.code or "").strip(),
+            "brand": (body.brand or "").strip(),
             "image": (body.image or "").strip(),
             "purchase_price": body.purchase_price,
             "sale_price": body.sale_price,
             "stock": body.stock,
-            "currency": (body.currency or "TRY").upper(),
+            "currency": (body.currency or "EUR").upper(),
             "created_at": now,
             "updated_at": now,
         }
@@ -135,6 +148,7 @@ def build_inventory_router(db):
                 "catalog_source_id": src,
                 "name": (p.get("title_de") or p.get("title") or "").strip(),
                 "code": (p.get("code") or "").strip(),
+                "brand": (p.get("brand") or "").strip(),
                 "image": p.get("image") or "",
                 "purchase_price": None,
                 "sale_price": p.get("price"),

@@ -24,7 +24,8 @@ const L = {
     title: "Envanter Yönetimi", subtitle: "Depo stok ve fiyat takibi", productsWord: "ürün",
     addProduct: "Ürün Ekle", search: "İsim veya ürün kodu ara…",
     product: "Ürün", code: "Ürün Kodu", buyPrice: "Alış Fiyatı", sellPrice: "Satış Fiyatı", stock: "Stok", currency: "Para Birimi", actions: "İşlem",
-    stockAll: "Tüm Stoklar", stockIn: "Stokta", stockLow: "Az Stok", stockOut: "Tükendi",
+    stockAll: "Tüm Stoklar", stockIn: "Stokta", stockLow: "Az Stok", stockOut: "Tükendi", stockEmpty: "Girilmemiş",
+    allBrands: "Tüm Markalar", brand: "Marka",
     selected: "seçili", delete: "Sil",
     edit: "Düzenle", save: "Kaydet", cancel: "İptal",
     editTitle: "Ürünü Düzenle", newTitle: "Yeni Ürün",
@@ -37,7 +38,8 @@ const L = {
     title: "Bestandsverwaltung", subtitle: "Lagerbestand & Preisverfolgung", productsWord: "Produkte",
     addProduct: "Produkt hinzufügen", search: "Name oder Artikelnr. suchen…",
     product: "Produkt", code: "Artikelnr.", buyPrice: "Einkaufspreis", sellPrice: "Verkaufspreis", stock: "Bestand", currency: "Währung", actions: "Aktion",
-    stockAll: "Alle Bestände", stockIn: "Auf Lager", stockLow: "Wenig", stockOut: "Ausverkauft",
+    stockAll: "Alle Bestände", stockIn: "Auf Lager", stockLow: "Wenig", stockOut: "Ausverkauft", stockEmpty: "Nicht erfasst",
+    allBrands: "Alle Marken", brand: "Marke",
     selected: "ausgewählt", delete: "Löschen",
     edit: "Bearbeiten", save: "Speichern", cancel: "Abbrechen",
     editTitle: "Produkt bearbeiten", newTitle: "Neues Produkt",
@@ -48,7 +50,7 @@ const L = {
   },
 };
 
-const emptyProduct = { name: "", code: "", image: "", purchase_price: "", sale_price: "", stock: "", currency: "TRY" };
+const emptyProduct = { name: "", code: "", brand: "", image: "", purchase_price: "", sale_price: "", stock: "", currency: "EUR" };
 const LOW_STOCK = 5;
 
 export default function Envanter() {
@@ -61,6 +63,8 @@ export default function Envanter() {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [stockStatus, setStockStatus] = useState("all");
+  const [brand, setBrand] = useState("");
+  const [brands, setBrands] = useState([]);
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // product being edited/created
@@ -74,10 +78,17 @@ export default function Envanter() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await api.get("/inventory", { params: { search: debounced, stock_status: stockStatus, page, page_size: PAGE_SIZE } });
+      const r = await api.get("/inventory", { params: { search: debounced, stock_status: stockStatus, brand, page, page_size: PAGE_SIZE } });
       setItems(r.data.items || []); setTotal(r.data.total || 0);
     } catch (e) { toast.error(formatApiError(e)); } finally { setLoading(false); }
-  }, [debounced, stockStatus, page]);
+  }, [debounced, stockStatus, brand, page]);
+
+  const loadFacets = useCallback(async () => {
+    try { const r = await api.get("/inventory/facets"); setBrands(r.data.brands || []); }
+    catch { /* noop */ }
+  }, []);
+
+  useEffect(() => { loadFacets(); }, [loadFacets]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -97,10 +108,11 @@ export default function Envanter() {
     setEditing({
       ...p,
       code: p.code ?? "",
+      brand: p.brand ?? "",
       purchase_price: p.purchase_price ?? "",
       sale_price: p.sale_price ?? "",
       stock: p.stock ?? "",
-      currency: p.currency || "TRY",
+      currency: p.currency || "EUR",
     });
     setIsNew(false);
   };
@@ -113,16 +125,17 @@ export default function Envanter() {
     const payload = {
       name: editing.name.trim(),
       code: (editing.code || "").trim(),
+      brand: (editing.brand || "").trim(),
       image: editing.image || "",
       purchase_price: num(editing.purchase_price),
       sale_price: num(editing.sale_price),
       stock: num(editing.stock),
-      currency: editing.currency || "TRY",
+      currency: editing.currency || "EUR",
     };
     try {
       if (isNew) await api.post("/inventory", payload);
       else await api.put(`/inventory/${editing.id}`, payload);
-      setEditing(null); await load();
+      setEditing(null); await load(); await loadFacets();
     } catch (e) { toast.error(formatApiError(e)); } finally { setSaving(false); }
   };
 
@@ -144,12 +157,12 @@ export default function Envanter() {
 
   const bulkDelete = async () => {
     if (!selectedIds.length || !window.confirm(tx.confirmDelete)) return;
-    try { await api.post("/inventory/bulk-delete", { ids: selectedIds }); clearSel(); await load(); }
+    try { await api.post("/inventory/bulk-delete", { ids: selectedIds }); clearSel(); await load(); await loadFacets(); }
     catch (e) { toast.error(formatApiError(e)); }
   };
   const deleteOne = async (id) => {
     if (!window.confirm(tx.confirmDeleteOne)) return;
-    try { await api.delete(`/inventory/${id}`); await load(); }
+    try { await api.delete(`/inventory/${id}`); await load(); await loadFacets(); }
     catch (e) { toast.error(formatApiError(e)); }
   };
 
@@ -181,6 +194,14 @@ export default function Envanter() {
             <SelectItem value="in">{tx.stockIn}</SelectItem>
             <SelectItem value="low">{tx.stockLow}</SelectItem>
             <SelectItem value="out">{tx.stockOut}</SelectItem>
+            <SelectItem value="empty">{tx.stockEmpty}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={brand || "all"} onValueChange={(v) => { setBrand(v === "all" ? "" : v); setPage(1); }}>
+          <SelectTrigger className="w-48" data-testid="inventory-brand-filter"><SelectValue placeholder={tx.allBrands} /></SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">{tx.allBrands}</SelectItem>
+            {brands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -221,7 +242,7 @@ export default function Envanter() {
                     {p.image ? <img src={p.image} alt="" className="w-10 h-10 object-cover rounded border border-zinc-200" loading="lazy" />
                       : <div className="w-10 h-10 rounded border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-300"><ImageOff size={14} /></div>}
                   </td>
-                  <td className="px-3 py-2"><div className="font-medium text-zinc-900 line-clamp-2">{p.name}</div>{p.code && <div className="text-[11px] text-zinc-400 mt-0.5 font-mono">{p.code}</div>}</td>
+                  <td className="px-3 py-2"><div className="font-medium text-zinc-900 line-clamp-2">{p.name}</div><div className="flex items-center gap-2 mt-0.5">{p.code && <span className="text-[11px] text-zinc-400 font-mono">{p.code}</span>}{p.brand && <span className="text-[11px] text-zinc-500">· {p.brand}</span>}</div></td>
                   <td className="px-3 py-2 text-right tabular-nums text-zinc-700">{money(p.purchase_price, p.currency)}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-zinc-700">{money(p.sale_price, p.currency)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">
@@ -270,7 +291,7 @@ export default function Envanter() {
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs">{tx.name}</Label>
                   <Input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} data-testid="inventory-name" />
@@ -278,6 +299,10 @@ export default function Envanter() {
                 <div>
                   <Label className="text-xs">{tx.code}</Label>
                   <Input value={editing.code || ""} onChange={(e) => setEditing({ ...editing, code: e.target.value })} data-testid="inventory-code" />
+                </div>
+                <div>
+                  <Label className="text-xs">{tx.brand}</Label>
+                  <Input value={editing.brand || ""} onChange={(e) => setEditing({ ...editing, brand: e.target.value })} data-testid="inventory-brand" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
