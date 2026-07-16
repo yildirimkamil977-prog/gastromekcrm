@@ -1,3 +1,10 @@
+## Round 28 — Inventory enhancements: code, stock warnings, sort, filters + catalog Lager badge (2026-06-XX)
+- Catalog: products already moved to inventory show a blue 'Depo/Lager' warehouse badge (catalog list annotates in_inventory via inventory_products.catalog_source_id). moveToInventory reloads list.
+- Inventory: added product CODE (Ürün Kodu/Artikelnr.) — stored, shown under name (monospace), input in Add/Edit dialog; from-catalog now copies catalog code.
+- Stock warnings: amber pill for low stock (<= LOW_STOCK=5), red + AlertTriangle for out-of-stock (<=0). Low-stock-first sort (aggregation $ifNull pushes empty-stock rows to bottom).
+- Search now matches name OR code; new stock-status filter (all/in/low/out) via GET /api/inventory?stock_status=.
+- Verified: backend curl (code carried, in_inventory flag, sort 0→3→100→null, filters, code search) + frontend 100% (iteration_21, 9/9 scenarios). No bugs.
+
 ## Round 27 — Inventory (Envanter/Bestand) module — independent warehouse stock (2026-06-XX)
 - New admin-only "Envanter" page (/envanter) + separate `inventory_products` collection, fully ISOLATED (not synced from feed, not linked to catalog_products/products/quotes — edits/deletes never affect other modules).
 - Fields: image, name, purchase_price (Alış), sale_price (Satış), stock, currency (TRY/EUR).
