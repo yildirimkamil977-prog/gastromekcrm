@@ -124,6 +124,15 @@ def build_catalog_router(db):
         items = await db.catalog_products.find(q, {"_id": 0}).sort(
             [("in_export", -1), ("translated", -1), ("title", 1)]
         ).skip(skip).limit(page_size).to_list(page_size)
+        # annotate which products are already moved into inventory
+        ids = [p.get("id") for p in items if p.get("id")]
+        if ids:
+            inv = await db.inventory_products.find(
+                {"catalog_source_id": {"$in": ids}}, {"catalog_source_id": 1, "_id": 0}
+            ).to_list(len(ids))
+            in_inv = {d["catalog_source_id"] for d in inv}
+            for p in items:
+                p["in_inventory"] = p.get("id") in in_inv
         return {"items": items, "total": total, "page": page, "page_size": page_size}
 
     @router.get("/facets")

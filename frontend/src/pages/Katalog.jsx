@@ -38,7 +38,7 @@ const L = {
     currencyDone: "Para birimi güncellendi",
     selected: "seçili", delete: "Sil", translate: "Almancaya Çevir",
     addXml: "XML'e Ekle", removeXml: "XML'den Çıkar", csv: "CSV İndir",
-    toInventory: "Envantere Taşı",
+    toInventory: "Envantere Taşı", inInventory: "Depo",
     edit: "Düzenle", save: "Kaydet", cancel: "İptal",
     editTitle: "Ürünü Düzenle", nameTr: "İsim (TR)", nameDe: "İsim (DE)",
     descTr: "Açıklama (TR)", descDe: "Açıklama (DE)", catTr: "Kategori (TR)", catDe: "Kategori (DE)",
@@ -59,7 +59,7 @@ const L = {
     currencyDone: "Währung aktualisiert",
     selected: "ausgewählt", delete: "Löschen", translate: "Ins Deutsche übersetzen",
     addXml: "Zu XML", removeXml: "Aus XML", csv: "CSV",
-    toInventory: "In Bestand",
+    toInventory: "In Bestand", inInventory: "Lager",
     edit: "Bearbeiten", save: "Speichern", cancel: "Abbrechen",
     editTitle: "Produkt bearbeiten", nameTr: "Name (TR)", nameDe: "Name (DE)",
     descTr: "Beschreibung (TR)", descDe: "Beschreibung (DE)", catTr: "Kategorie (TR)", catDe: "Kategorie (DE)",
@@ -232,6 +232,7 @@ export default function Katalog() {
       const r = await api.post("/inventory/from-catalog", { ids: selectedIds });
       toast.success(`${tx.toInventory}: +${r.data.added}`);
       clearSel();
+      await load();
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
@@ -358,6 +359,7 @@ export default function Katalog() {
                       {p.code && <span className="text-[11px] text-zinc-400">{p.code}</span>}
                       {p.translated && <Badge className="bg-brand/15 text-brand hover:bg-brand/15 text-[10px] px-1.5 py-0">DE</Badge>}
                       {p.in_export && <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-[10px] px-1.5 py-0 gap-0.5"><FileCode2 size={9} />XML</Badge>}
+                      {p.in_inventory && <Badge className="bg-sky-600 text-white hover:bg-sky-600 text-[10px] px-1.5 py-0 gap-0.5"><Warehouse size={9} />{tx.inInventory}</Badge>}
                     </div>
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums text-zinc-700">{formatMoney(p.price, p.currency)}</td>

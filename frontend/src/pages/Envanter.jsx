@@ -22,31 +22,34 @@ const PAGE_SIZE = 50;
 const L = {
   tr: {
     title: "Envanter Yönetimi", subtitle: "Depo stok ve fiyat takibi", productsWord: "ürün",
-    addProduct: "Ürün Ekle", search: "Ürün adı ara…",
-    product: "Ürün", buyPrice: "Alış Fiyatı", sellPrice: "Satış Fiyatı", stock: "Stok", currency: "Para Birimi", actions: "İşlem",
+    addProduct: "Ürün Ekle", search: "İsim veya ürün kodu ara…",
+    product: "Ürün", code: "Ürün Kodu", buyPrice: "Alış Fiyatı", sellPrice: "Satış Fiyatı", stock: "Stok", currency: "Para Birimi", actions: "İşlem",
+    stockAll: "Tüm Stoklar", stockIn: "Stokta", stockLow: "Az Stok", stockOut: "Tükendi",
     selected: "seçili", delete: "Sil",
     edit: "Düzenle", save: "Kaydet", cancel: "İptal",
     editTitle: "Ürünü Düzenle", newTitle: "Yeni Ürün",
     name: "İsim", image: "Görsel URL", upload: "Yükle", uploading: "Yükleniyor…", imageUploaded: "Görsel yüklendi",
     none: "Ürün bulunamadı", empty: "Envanter boş. \"Ürün Ekle\" ile başlayın veya Katalog'dan ürün taşıyın.",
     loading: "Yükleniyor…", confirmDelete: "Seçili ürünler silinsin mi?", confirmDeleteOne: "Bu ürün silinsin mi?",
-    nameRequired: "İsim zorunludur", empty_: "—", low: "Düşük stok",
+    nameRequired: "İsim zorunludur", empty_: "—", low: "Az stok", out: "Tükendi",
   },
   de: {
     title: "Bestandsverwaltung", subtitle: "Lagerbestand & Preisverfolgung", productsWord: "Produkte",
-    addProduct: "Produkt hinzufügen", search: "Produktname suchen…",
-    product: "Produkt", buyPrice: "Einkaufspreis", sellPrice: "Verkaufspreis", stock: "Bestand", currency: "Währung", actions: "Aktion",
+    addProduct: "Produkt hinzufügen", search: "Name oder Artikelnr. suchen…",
+    product: "Produkt", code: "Artikelnr.", buyPrice: "Einkaufspreis", sellPrice: "Verkaufspreis", stock: "Bestand", currency: "Währung", actions: "Aktion",
+    stockAll: "Alle Bestände", stockIn: "Auf Lager", stockLow: "Wenig", stockOut: "Ausverkauft",
     selected: "ausgewählt", delete: "Löschen",
     edit: "Bearbeiten", save: "Speichern", cancel: "Abbrechen",
     editTitle: "Produkt bearbeiten", newTitle: "Neues Produkt",
     name: "Name", image: "Bild-URL", upload: "Hochladen", uploading: "Lädt hoch…", imageUploaded: "Bild hochgeladen",
     none: "Keine Produkte gefunden", empty: "Bestand ist leer. Mit \"Produkt hinzufügen\" beginnen oder aus dem Katalog übertragen.",
     loading: "Laden…", confirmDelete: "Ausgewählte Produkte löschen?", confirmDeleteOne: "Dieses Produkt löschen?",
-    nameRequired: "Name ist erforderlich", empty_: "—", low: "Geringer Bestand",
+    nameRequired: "Name ist erforderlich", empty_: "—", low: "Wenig", out: "Ausverkauft",
   },
 };
 
-const emptyProduct = { name: "", image: "", purchase_price: "", sale_price: "", stock: "", currency: "TRY" };
+const emptyProduct = { name: "", code: "", image: "", purchase_price: "", sale_price: "", stock: "", currency: "TRY" };
+const LOW_STOCK = 5;
 
 export default function Envanter() {
   const { lang } = useT();
@@ -57,6 +60,7 @@ export default function Envanter() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [stockStatus, setStockStatus] = useState("all");
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // product being edited/created
@@ -70,10 +74,10 @@ export default function Envanter() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await api.get("/inventory", { params: { search: debounced, page, page_size: PAGE_SIZE } });
+      const r = await api.get("/inventory", { params: { search: debounced, stock_status: stockStatus, page, page_size: PAGE_SIZE } });
       setItems(r.data.items || []); setTotal(r.data.total || 0);
     } catch (e) { toast.error(formatApiError(e)); } finally { setLoading(false); }
-  }, [debounced, page]);
+  }, [debounced, stockStatus, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -92,6 +96,7 @@ export default function Envanter() {
   const openEdit = (p) => {
     setEditing({
       ...p,
+      code: p.code ?? "",
       purchase_price: p.purchase_price ?? "",
       sale_price: p.sale_price ?? "",
       stock: p.stock ?? "",
@@ -107,6 +112,7 @@ export default function Envanter() {
     setSaving(true);
     const payload = {
       name: editing.name.trim(),
+      code: (editing.code || "").trim(),
       image: editing.image || "",
       purchase_price: num(editing.purchase_price),
       sale_price: num(editing.sale_price),
@@ -162,10 +168,21 @@ export default function Envanter() {
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tx.search} className="pl-9" data-testid="inventory-search" />
+      {/* Search + filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[240px] max-w-md">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tx.search} className="pl-9" data-testid="inventory-search" />
+        </div>
+        <Select value={stockStatus} onValueChange={(v) => { setStockStatus(v); setPage(1); }}>
+          <SelectTrigger className="w-44" data-testid="inventory-stock-filter"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{tx.stockAll}</SelectItem>
+            <SelectItem value="in">{tx.stockIn}</SelectItem>
+            <SelectItem value="low">{tx.stockLow}</SelectItem>
+            <SelectItem value="out">{tx.stockOut}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Bulk bar */}
@@ -204,14 +221,18 @@ export default function Envanter() {
                     {p.image ? <img src={p.image} alt="" className="w-10 h-10 object-cover rounded border border-zinc-200" loading="lazy" />
                       : <div className="w-10 h-10 rounded border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-300"><ImageOff size={14} /></div>}
                   </td>
-                  <td className="px-3 py-2"><div className="font-medium text-zinc-900 line-clamp-2">{p.name}</div></td>
+                  <td className="px-3 py-2"><div className="font-medium text-zinc-900 line-clamp-2">{p.name}</div>{p.code && <div className="text-[11px] text-zinc-400 mt-0.5 font-mono">{p.code}</div>}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-zinc-700">{money(p.purchase_price, p.currency)}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-zinc-700">{money(p.sale_price, p.currency)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">
                     {p.stock === null || p.stock === undefined ? <span className="text-zinc-400">{tx.empty_}</span> : (
-                      <span className={Number(p.stock) <= 0 ? "text-red-600 font-medium inline-flex items-center gap-1" : "text-zinc-700"}>
-                        {Number(p.stock) <= 0 && <AlertTriangle size={12} />}{Number(p.stock)}
-                      </span>
+                      Number(p.stock) <= 0 ? (
+                        <span className="inline-flex items-center gap-1 text-red-600 font-medium" title={tx.out}><AlertTriangle size={12} />{Number(p.stock)}</span>
+                      ) : Number(p.stock) <= LOW_STOCK ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-xs font-medium" title={tx.low}><AlertTriangle size={11} />{Number(p.stock)}</span>
+                      ) : (
+                        <span className="text-zinc-700">{Number(p.stock)}</span>
+                      )
                     )}
                   </td>
                   <td className="px-3 py-2">
@@ -249,9 +270,15 @@ export default function Envanter() {
                   </Button>
                 </div>
               </div>
-              <div>
-                <Label className="text-xs">{tx.name}</Label>
-                <Input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} data-testid="inventory-name" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">{tx.name}</Label>
+                  <Input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} data-testid="inventory-name" />
+                </div>
+                <div>
+                  <Label className="text-xs">{tx.code}</Label>
+                  <Input value={editing.code || ""} onChange={(e) => setEditing({ ...editing, code: e.target.value })} data-testid="inventory-code" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="text-xs">{tx.buyPrice}</Label><Input type="number" step="0.01" value={editing.purchase_price ?? ""} onChange={(e) => setEditing({ ...editing, purchase_price: e.target.value })} data-testid="inventory-buy-price" /></div>

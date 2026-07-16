@@ -1,0 +1,43 @@
+{
+  "summary": "Frontend-only verification of Inventory (Envanter/Bestand) & Catalog enhancements: warehouse (Lager) badge on catalog after move, code column + input in inventory, stock warning badges (amber low <=5 / red out-of-stock), low-stock-first sort with empty-stock last, stock filter (all/in/low/out), search by name & code, edit updating code, and catalog regression. All 9 requested feature scenarios verified successfully. Cleanup of test inventory items performed at end (final rows = 0).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_21.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Envanter.jsx: LOW_STOCK constant duplicated between frontend and backend (both hard-coded to 5). Consider exposing threshold via a GET /api/inventory/config endpoint or shared constant so UI never drifts from backend classification of 'low'.",
+    "Envanter.jsx bulk-bar uses window.confirm() (native browser dialog) — not stylable, inconsistent with rest of the dashboard which uses shadcn Dialogs. Also breaks any potential Playwright dialog handler chaining under stress; consider a shadcn AlertDialog for confirmations.",
+    "Envanter.jsx renders name+code in the same <td> without a min-width, so on narrow tablet widths the code (font-mono, text-[11px]) can wrap awkwardly. Minor cosmetic.",
+    "Katalog.jsx moveToInventory only reload()s the current page; if a moved product falls outside the current filter/page after list reload it will not visually reflect the badge. Acceptable for now but worth documenting."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100% (9/9 requested scenarios)"},
+  "test_credentials": "admin@arigastro.com / admin123",
+  "seed_data_creation": "Created 4 inventory products (TEST-1 stock=3, TEST-OUT stock=0, TEST-HI stock=100, TEST-EMPTY stock=null) + 1 catalog-transferred product (RB-286 Addis Ababa Coffee) during the test run. ALL created inventory data has been bulk-deleted at the end (final rows = 0). Catalog product RB-286 remains in the catalog (as expected — catalog is source of truth); its 'Lager' badge is now visible on the catalog list.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Inventory verified feature-complete for stock warnings, sort order, filters, search (name/code), code column, and code editing. Katalog Lager badge appears blue with warehouse icon after move. If cleanup did not re-run for any reason, the transferred RB-286 could still appear in inventory — safe to delete via the /envanter page. Backend was already curl-verified by the main agent before this run.",
+  "verification_results": {
+    "catalog_lager_badge": "PASS - After ticking catalog-check and clicking catalog-to-inventory-btn ('In Bestand'), the 'Lager' badge (blue bg-sky-600 with Warehouse icon) rendered in the catalog row next to the DE and XML badges. Screenshot confirms.",
+    "inventory_code_field": "PASS - inventory-code input present in Add/Edit dialog; TEST-1 saved with code 'TEST-1' visible as monospace text under the product name.",
+    "low_stock_amber_badge": "PASS - TEST-1 (stock=3) shows amber pill with AlertTriangle icon (bg-amber-100 text-amber-700).",
+    "out_of_stock_red": "PASS - TEST-OUT (stock=0) shows red '0' with AlertTriangle warning icon (text-red-600).",
+    "high_stock_plain": "PASS (visually confirmed) - TEST-HI (stock=100) shows plain '100' with no badge. My automated regex assertion returned FAIL because every row also has a red delete-icon button (text-red-600), but the stock cell itself is plain; screenshot confirms correctness.",
+    "sort_low_first_empty_last": "PASS - Observed order with all four TEST rows: stock 0 → stock 3 → stock 100 → empty. Exactly as specified.",
+    "stock_filter_low": "PASS - 'Wenig' shows only TEST-1 (stock 3).",
+    "stock_filter_out": "PASS - 'Ausverkauft' shows only TEST-OUT (stock 0).",
+    "stock_filter_in": "PASS - 'Auf Lager' shows TEST-1 (3) + TEST-HI (100); excludes TEST-OUT and TEST-EMPTY.",
+    "stock_filter_all": "PASS - 'Alle Bestände' shows all 4 test products.",
+    "search_by_code": "PASS - typing 'TEST-1' returns exactly one matching row.",
+    "search_by_name": "PASS - typing 'High Stock' returns exactly one matching row.",
+    "edit_preserves_updates_code": "PASS - Edited TEST-1 code to 'TEST-1-UPD', saved, table reflects new code immediately.",
+    "catalog_regression": "PASS - /katalog still lists 50 rows per page, XML/DE badges still render correctly, no errors.",
+    "cleanup": "PASS - Final inventory rows = 0."
+  }
+}

@@ -18,9 +18,12 @@ from auth import get_current_user_from_request
 
 logger = logging.getLogger("inventory")
 
+LOW_STOCK = 5  # threshold for "low stock" warning/filter
+
 
 class InventoryBody(BaseModel):
     name: Optional[str] = None
+    code: Optional[str] = None
     image: Optional[str] = None
     purchase_price: Optional[float] = None
     sale_price: Optional[float] = None
@@ -44,19 +47,34 @@ def build_inventory_router(db):
     @router.get("")
     async def list_products(
         search: str = Query(""),
+        stock_status: str = Query("all"),  # all | in | low | out
         page: int = Query(1, ge=1),
         page_size: int = Query(50, ge=1, le=200),
         user=Depends(admin_user),
     ):
-        q: dict = {}
+        match: dict = {}
         if search:
-            q["name"] = {"$regex": search, "$options": "i"}
-        total = await db.inventory_products.count_documents(q)
+            rx = {"$regex": search, "$options": "i"}
+            match["$or"] = [{"name": rx}, {"code": rx}]
+        if stock_status == "in":
+            match["stock"] = {"$gt": 0}
+        elif stock_status == "low":
+            match["stock"] = {"$gt": 0, "$lte": LOW_STOCK}
+        elif stock_status == "out":
+            match["stock"] = {"$ne": None, "$lte": 0}
+        total = await db.inventory_products.count_documents(match)
         skip = (page - 1) * page_size
-        items = await db.inventory_products.find(q, {"_id": 0}).sort(
-            "created_at", -1
-        ).skip(skip).limit(page_size).to_list(page_size)
-        return {"items": items, "total": total, "page": page, "page_size": page_size}
+        # low stock first: null stock (not yet filled) pushed to the bottom
+        pipeline = [
+            {"$match": match},
+            {"$addFields": {"_stock_sort": {"$ifNull": ["$stock", 1e18]}}},
+            {"$sort": {"_stock_sort": 1, "created_at": -1}},
+            {"$skip": skip},
+            {"$limit": page_size},
+            {"$project": {"_id": 0, "_stock_sort": 0}},
+        ]
+        items = await db.inventory_products.aggregate(pipeline).to_list(page_size)
+        return {"items": items, "total": total, "page": page, "page_size": page_size, "low_stock": LOW_STOCK}
 
     @router.post("")
     async def create_product(body: InventoryBody, user=Depends(admin_user)):
@@ -64,6 +82,7 @@ def build_inventory_router(db):
         doc = {
             "id": uuid.uuid4().hex,
             "name": (body.name or "").strip(),
+            "code": (body.code or "").strip(),
             "image": (body.image or "").strip(),
             "purchase_price": body.purchase_price,
             "sale_price": body.sale_price,
@@ -115,6 +134,7 @@ def build_inventory_router(db):
                 "id": uuid.uuid4().hex,
                 "catalog_source_id": src,
                 "name": (p.get("title_de") or p.get("title") or "").strip(),
+                "code": (p.get("code") or "").strip(),
                 "image": p.get("image") or "",
                 "purchase_price": None,
                 "sale_price": p.get("price"),
