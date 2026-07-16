@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "../components/ui/dialog";
 import Pagination from "../components/Pagination";
 import {
@@ -21,7 +21,7 @@ const PAGE_SIZE = 50;
 
 const L = {
   tr: {
-    title: "Envanter Yönetimi", subtitle: "Depo stok ve fiyat takibi",
+    title: "Envanter Yönetimi", subtitle: "Depo stok ve fiyat takibi", productsWord: "ürün",
     addProduct: "Ürün Ekle", search: "Ürün adı ara…",
     product: "Ürün", buyPrice: "Alış Fiyatı", sellPrice: "Satış Fiyatı", stock: "Stok", currency: "Para Birimi", actions: "İşlem",
     selected: "seçili", delete: "Sil",
@@ -33,7 +33,7 @@ const L = {
     nameRequired: "İsim zorunludur", empty_: "—", low: "Düşük stok",
   },
   de: {
-    title: "Bestandsverwaltung", subtitle: "Lagerbestand & Preisverfolgung",
+    title: "Bestandsverwaltung", subtitle: "Lagerbestand & Preisverfolgung", productsWord: "Produkte",
     addProduct: "Produkt hinzufügen", search: "Produktname suchen…",
     product: "Produkt", buyPrice: "Einkaufspreis", sellPrice: "Verkaufspreis", stock: "Bestand", currency: "Währung", actions: "Aktion",
     selected: "ausgewählt", delete: "Löschen",
@@ -155,7 +155,7 @@ export default function Envanter() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-heading font-bold text-zinc-900 flex items-center gap-2"><Warehouse size={22} className="text-brand" /> {tx.title}</h1>
-          <p className="text-sm text-zinc-500">{tx.subtitle} · {total} ürün</p>
+          <p className="text-sm text-zinc-500">{tx.subtitle} · {total} {tx.productsWord}</p>
         </div>
         <Button onClick={openNew} className="bg-brand hover:bg-brand-hover text-white" data-testid="inventory-add-btn">
           <Plus size={15} className="mr-2" />{tx.addProduct}
@@ -232,6 +232,7 @@ export default function Envanter() {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-lg" data-testid="inventory-edit-dialog">
           <DialogHeader><DialogTitle>{isNew ? tx.newTitle : tx.editTitle}</DialogTitle></DialogHeader>
+          <DialogDescription className="sr-only">{tx.title}</DialogDescription>
           {editing && (
             <div className="space-y-3">
               <div className="flex items-start gap-3">

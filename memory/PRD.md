@@ -1,3 +1,10 @@
+## Round 27 — Inventory (Envanter/Bestand) module — independent warehouse stock (2026-06-XX)
+- New admin-only "Envanter" page (/envanter) + separate `inventory_products` collection, fully ISOLATED (not synced from feed, not linked to catalog_products/products/quotes — edits/deletes never affect other modules).
+- Fields: image, name, purchase_price (Alış), sale_price (Satış), stock, currency (TRY/EUR).
+- Backend routes/inventory.py: GET /inventory (search+pagination), POST (manual create), PUT/{id}, DELETE/{id}, POST /bulk-delete, POST /from-catalog {ids} (copies name=title_de||title + image + sale_price=catalog price; purchase_price & stock left null; currency carried; dedupes by catalog_source_id). Admin-only.
+- Frontend Envanter.jsx: table (checkbox/image/name/buy/sell/stock/actions), add+edit dialog (with image upload from computer), single+bulk delete, low/zero-stock warning. Katalog.jsx: 'Envantere Taşı / In Bestand' button (catalog-to-inventory-btn) in bulk bar → moves selected. Nav link nav-inventory (DE 'Bestand' / TR 'Envanter'), route adminOnly.
+- Verified: backend via curl (create/edit/delete/bulk/from-catalog dedupe + ISOLATION: editing inventory copy did NOT change catalog title). Frontend 100% (iteration_20, 11/11 flows incl. catalog→inventory transfer + isolation regression). Fixed subtitle i18n + dialog a11y.
+
 ## Round 26 — Quote custom item: image upload from computer (2026-06-XX)
 - Enhancement: in the Quote form custom line item, product image can now be added BOTH via URL and by uploading a file from computer. ItemRow (QuoteForm.jsx) image edit mode now shows: item-image-url-input, item-image-upload-btn (triggers hidden item-image-file-input), uploads via POST /api/uploads (multipart), stores returned URL (prefixes REACT_APP_BACKEND_URL if relative). i18n keys uploadFromComputer/uploading/imageUploaded/done (DE+TR).
 - Verified 100% (iteration_19, frontend): url-input + upload-btn + file-input all present; file upload → 200 + toast + thumbnail; URL method works; catalog picker regression OK. No issues.
