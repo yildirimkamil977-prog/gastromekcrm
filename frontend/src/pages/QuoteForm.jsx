@@ -427,7 +427,7 @@ function ItemRow({ item, onChange, onRemove, currency }) {
         <div className="col-span-12 md:col-span-2">
           {editing.image ? (
             <div className="space-y-1.5">
-              <Input autoFocus value={item.image || ""} onChange={(e) => onChange({ image: e.target.value })} onBlur={() => stop("image")} placeholder={t("quoteForm.imageUrl")} className="h-8 text-xs" data-testid="item-image-url-input" />
+              <Input autoFocus value={item.image || ""} onChange={(e) => onChange({ image: e.target.value })} placeholder={t("quoteForm.imageUrl")} className="h-8 text-xs" data-testid="item-image-url-input" />
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadImage} data-testid="item-image-file-input" />
               <Button type="button" size="sm" variant="outline" className="w-full h-8 text-xs" disabled={uploading} onMouseDown={(e) => e.preventDefault()} onClick={() => fileRef.current?.click()} data-testid="item-image-upload-btn">
                 {uploading ? <Loader2 size={12} className="mr-1.5 animate-spin" /> : <Upload size={12} className="mr-1.5" />}
