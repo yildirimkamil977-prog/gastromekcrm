@@ -1,3 +1,7 @@
+## Round 26 — Quote custom item: image upload from computer (2026-06-XX)
+- Enhancement: in the Quote form custom line item, product image can now be added BOTH via URL and by uploading a file from computer. ItemRow (QuoteForm.jsx) image edit mode now shows: item-image-url-input, item-image-upload-btn (triggers hidden item-image-file-input), uploads via POST /api/uploads (multipart), stores returned URL (prefixes REACT_APP_BACKEND_URL if relative). i18n keys uploadFromComputer/uploading/imageUploaded/done (DE+TR).
+- Verified 100% (iteration_19, frontend): url-input + upload-btn + file-input all present; file upload → 200 + toast + thumbnail; URL method works; catalog picker regression OK. No issues.
+
 ## Round 25 — FIX catalog title not translated (2026-06-XX)
 - BUG: on translate, description+category → German but TITLE stayed Turkish (e.g. "Arıgastro Kahve Posa Çekmecesi Siyah" unchanged). Cause: system prompt said "keep brand and model names UNCHANGED" → gpt-4o-mini treated the whole product name as a brand name.
 - FIX (routes/catalog.py translate system prompt): explicit rule — the TITLE is a product name, MUST translate descriptive/common words, keep ONLY the brand name + alphanumeric codes; added a worked example. Verified via curl: DE title now "Arıgastro Kaffeesatzschublade Schwarz".
