@@ -13,7 +13,7 @@ import {
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "../components/ui/popover";
-import { Pencil, Plus, Save, Search, Trash2, X, ListPlus } from "lucide-react";
+import { Pencil, Plus, Save, Search, Trash2, X, ListPlus, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 function plusDaysISO(days) {
@@ -371,8 +371,30 @@ function ItemRow({ item, onChange, onRemove, currency }) {
   const { t } = useT();
   const [editing, setEditing] = useState({});
   const [newFeature, setNewFeature] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = React.useRef(null);
   const start = (field) => setEditing((x) => ({ ...x, [field]: true }));
   const stop = (field) => setEditing((x) => ({ ...x, [field]: false }));
+
+  const uploadImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await api.post("/uploads", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      let url = r.data.url || "";
+      if (url.startsWith("/")) url = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "") + url;
+      onChange({ image: url });
+      toast.success(t("quoteForm.imageUploaded"));
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   const features = item.features || [];
   const setFeatures = (arr) => onChange({ features: arr });
@@ -404,7 +426,15 @@ function ItemRow({ item, onChange, onRemove, currency }) {
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-12 md:col-span-2">
           {editing.image ? (
-            <Input autoFocus value={item.image || ""} onChange={(e) => onChange({ image: e.target.value })} onBlur={() => stop("image")} placeholder={t("quoteForm.imageUrl")} className="h-8 text-xs" />
+            <div className="space-y-1.5">
+              <Input autoFocus value={item.image || ""} onChange={(e) => onChange({ image: e.target.value })} onBlur={() => stop("image")} placeholder={t("quoteForm.imageUrl")} className="h-8 text-xs" data-testid="item-image-url-input" />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadImage} data-testid="item-image-file-input" />
+              <Button type="button" size="sm" variant="outline" className="w-full h-8 text-xs" disabled={uploading} onMouseDown={(e) => e.preventDefault()} onClick={() => fileRef.current?.click()} data-testid="item-image-upload-btn">
+                {uploading ? <Loader2 size={12} className="mr-1.5 animate-spin" /> : <Upload size={12} className="mr-1.5" />}
+                {uploading ? t("quoteForm.uploading") : t("quoteForm.uploadFromComputer")}
+              </Button>
+              <button type="button" onClick={() => stop("image")} className="w-full text-[10px] text-zinc-400 hover:text-zinc-600">{t("quoteForm.done")}</button>
+            </div>
           ) : (
             <button type="button" onClick={() => start("image")} className="group relative block w-full aspect-square bg-zinc-50 rounded-lg overflow-hidden border border-zinc-200">
               {item.image ? <img src={item.image} alt="" className="w-full h-full object-contain" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300 text-xs">{t("quoteForm.noImage")}</div>}

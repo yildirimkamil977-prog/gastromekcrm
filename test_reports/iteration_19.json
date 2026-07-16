@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only test of Quote Form custom-item image upload enhancement. Login, navigation, custom item creation, image edit mode UI (URL input + Upload button + hidden file input), file upload via POST /api/uploads, URL method, and catalog picker regression all VERIFIED WORKING.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "backend/routes/uploads.py: error message says 'Dosya 5 MB'den büyük olamaz' but MAX_BYTES is actually 10 MB (10*1024*1024). Message and limit are inconsistent (minor: cosmetic).",
+    "QuoteForm.jsx line 388: prepending REACT_APP_BACKEND_URL only when url starts with '/'. Backend already returns full URL when PUBLIC_BASE_URL is set (preview does). Safe fallback but note behaviour split.",
+    "ItemRow onBlur on URL Input auto-exits edit mode: this occurs before user can click Upload button. Mitigated already via onMouseDown={(e)=>e.preventDefault()} on Upload button. Works correctly in preview (verified)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100%"},
+  "test_credentials": "admin@arigastro.com / admin123",
+  "seed_data_creation": "No quotes were persisted (Save button was never clicked). Only ephemeral upload file remains at /app/uploads/89d61438f7b5938f.png (132 bytes) from the file-upload test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Feature: In Quote Form (/teklifler/yeni), adding a custom line item ('Eigene Position' in DE / 'Özel Kalem' in TR) and clicking the image placeholder now shows THREE controls: (1) data-testid='item-image-url-input' URL text input, (2) data-testid='item-image-upload-btn' Upload button (labelled 'Hochladen' in DE / 'Bilgisayardan Yükle' in TR) which programmatically triggers (3) hidden data-testid='item-image-file-input' input[type=file]. Uploads POST to /api/uploads (multipart), backend returns {url, filename, size}; toast 'Bild hochgeladen / Görsel yüklendi'. Both URL and Upload methods verified. Catalog product picker regression verified (product 'Bartscher İndüksiyonlu Isıtıcı Ocak' added with image). Note: default UI language is Deutsch.",
+  "rca of the issue": "N/A — no issues found",
+  "test_details": {
+    "login": "POST /api/auth/login returned 200 with access_token cookie",
+    "custom_item_add": "add-custom-item-btn click added a row with 'Eigene Position' (customItemDefault)",
+    "image_edit_mode": "All 3 testids present. url-input visible=true, upload-btn visible=true (text='Hochladen'), file-input present (hidden)",
+    "file_upload": "POST /api/uploads -> 200. Response: {url: 'https://crm-quote-hub.preview.emergentagent.com/api/uploads/file/89d61438f7b5938f.png', filename: '89d61438f7b5938f.png', size: 132}. Toast 'Bild hochgeladen' displayed. URL stored in item-image-url-input.",
+    "url_method": "Typed https://images.unsplash.com/photo-1519681393784-d120267933ba?w=80 into url-input, clicked Fertig -> image rendered (src verified).",
+    "regression_catalog": "Search 'oc' returned 12 product options, clicked first -> product row added with image. Total aspect-square imgs on page: 2."
+  }
+}
