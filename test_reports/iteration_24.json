@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend-only regression test of Delivery Note refinements + customer Country field on Gastromek CRM. All 8 targeted checks PASSED against the public preview URL. (1) Customers form now has customer-country input next to customer-city; created 'TEST_Country_*' with city=Witten, country=Deutschland, address='Teststr. 1'; reopening edit sheet confirmed country persisted. (2) Quote AR-202604-0003 opened, delivery-note-btn revealed dialog. (3) Note flow: dn-add-note-btn reveals dn-note-input textarea; typing 'Sevkiyat 2 parça halinde teslim edilecektir.' works. (4) Selecting dn-check-0 + click dn-create-btn downloaded 'Lieferschein-AR-202604-0003-L1.pdf' with ZERO console errors and dialog closed. (5) LAYOUT MEASUREMENT (transient #delivery-note-root captured via MutationObserver): heightMm=242.7 (<297mm ⇒ single page); tbody row count=5 which equals 2 header-info rows + 2 order-data rows + 1 items-table row for the 1 selected item (NO filler rows); rendered note text present in DOM; customer address block includes city (Witten). Country was not present because test quote's customer 'Esra Butik' has no country set — expected. (6) WARNING regression: reopened, dn-delivered-badge-0 visible, selecting item 0 + 1 shows dn-warning + button label 'Fortfahren', second click downloads Lieferschein-...-L2.pdf. (7) BILINGUAL: switch dn-lang to Türkçe, add note, select item, create → downloads Irsaliye-AR-202604-0003-L3.pdf. (8) Normal quote PDF download-pdf-de → Angebot-AR-202604-0003-DE.pdf and priceless download-priceless-de → Angebot-AR-202604-0003-DE-ohne-Preise.pdf both succeed; on-screen #quote-pdf-root customer block renders 'address, city' via fullAddress() (customer had no country so only two parts rendered — verified format works).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "QuoteView.jsx is 618 lines — DeliveryNoteDialog, EmailDialog, WhatsAppDialog and the generatePdf/translation logic should be extracted into separate modules/hooks.",
+    "The 500ms setTimeout after setDnData before html2canvas capture is fragile; a useLayoutEffect + ready flag would be more robust.",
+    "DeliveryNoteTemplate uses new Date().toISOString() at render — delivery date should ideally come from the backend response for audit consistency (aligns with delivery_no).",
+    "In Customers.jsx the 'address' input is missing a data-testid (all others in that form use testids); minor testability gap.",
+    "fullAddress() joins address+city+country with ', ' — if only city+country exist, address is skipped correctly, but consider trimming empty parts explicitly."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "test_credentials": "admin@arigastro.com / admin123",
+  "seed_data_creation": "Created one test customer 'TEST_Country_<hex>' with city=Witten country=Deutschland address='Teststr. 1'. Test quote AR-202604-0003 (3b645b60-...) had 3 new delivery notes issued during this run (L1/L2/L3) and both items are now marked delivered — main agent should reset delivered_items=[] and delivery_note_seq=0 for that quote if re-testing initial state, or use a fresh quote.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All refinements verified: (a) customer country field + persistence, (b) dn-add-note-btn/dn-note-input flow, (c) note rendered in delivery-note PDF, (d) single-page layout (242.7mm for 1 item) with no filler rows, (e) warning regression + bilingual TR/DE + normal & priceless PDF downloads. Layout measurement was captured successfully via MutationObserver on #delivery-note-root (element is transient during html2canvas capture). If retesting delivery-note initial state, use a fresh quote — AR-202604-0003 is now at L3 with both items delivered.",
+  "rca of the issue": "No issues found."
+}

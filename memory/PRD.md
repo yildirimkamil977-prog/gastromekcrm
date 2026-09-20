@@ -1,3 +1,9 @@
+## Round 32 — İrsaliye refinements + customer Country + address in all forms (2026-06-XX)
+- DeliveryNoteTemplate redesign: bigger logo (68px) + company info block under logo; order-data box without underlines and WITHOUT Sipariş No/Auftragsnr. row; items table with NO filler rows (only real items); single-page layout (removed minHeight 297mm + marginTop:auto that caused spill to page 2 — verified 242.7mm for 1 item); signature blocks without fill lines — ÜBERGABE/Teslim Eden gained a Name field, EMPFANGSBESTÄTIGUNG/Teslim Alan lost the '(Büyük Harf)' text.
+- İrsaliye note: 'Not Ekle/Notiz hinzufügen' button (dn-add-note-btn) → textarea (dn-note-input) in the create dialog; note passed to template and rendered in Notlar/Hinweise area. Fully separate from quote notes.
+- Customer Country: CustomerBase.country added; Customers form Ülke/Land field (customer-country); i18n customers.country. New helper lib/api.js fullAddress()=address+city+country; used in QuotePDFTemplate + DeliveryNoteTemplate customer address.
+- Verified: frontend 100% (iteration_24, 8/8 incl. layout measurement via MutationObserver, note flow, country persistence, warning+bilingual regressions). Test data cleaned.
+
 ## Round 31 — Delivery Note (İrsaliye/Lieferschein) + HRB No (2026-06-XX)
 - New feature: generate a delivery note from a quote. QuoteView toolbar 'İrsaliye/Lieferschein' button (delivery-note-btn) opens a dialog to pick WHICH quote items to ship (only that quote's items) + language (TR/DE). Generates a bilingual PDF (title İRSALİYE / LIEFERSCHEIN) with signature areas (modern design) via html2canvas and downloads it (Lieferschein-<no>.pdf / Irsaliye-<no>.pdf).
 - Delivered items get a 'Gönderildi/Geliefert' badge; sidebar 'Sevkiyat Durumu/Lieferstatus' card shows shipped vs Offen/Bekliyor per item. Re-selecting an already-delivered item shows a warning + 'Devam Et/Fortfahren' button to proceed anyway.
