@@ -5,7 +5,9 @@ import { useT } from "../i18n/LanguageContext";
 import { PageBand, FullBleed } from "../components/Blueprint";
 import StatusBadge from "../components/StatusBadge";
 import QuotePDFTemplate from "../components/QuotePDFTemplate";
+import DeliveryNoteTemplate from "../components/DeliveryNoteTemplate";
 import { Button } from "../components/ui/button";
+import { Checkbox } from "../components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "../components/ui/dialog";
@@ -19,14 +21,31 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "../components/ui/dropdown-menu";
 import {
-  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, FileDown, ChevronDown,
+  Download, Pencil, Trash2, Send, MessageCircle, Mail, GitBranch, Loader2, Printer, FileDown, ChevronDown, Truck, PackageCheck, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+
+const DN_L = {
+  de: {
+    title: "Lieferschein erstellen", subtitle: "Zu liefernde Positionen auswählen (nur aus diesem Angebot).",
+    lang: "Sprache", selectItems: "Positionen", already: "bereits geliefert", delivered: "Geliefert",
+    warnTitle: "Bereits gelieferte Positionen", warnBody: "Folgende Positionen wurden bereits per Lieferschein geliefert. Möchten Sie fortfahren?",
+    continue: "Fortfahren", create: "Erstellen & Herunterladen", cancel: "Abbrechen", none: "Bitte mindestens eine Position auswählen.",
+    createBtn: "Lieferschein", statusTitle: "Lieferstatus", notDelivered: "Offen",
+  },
+  tr: {
+    title: "İrsaliye Oluştur", subtitle: "Gönderilecek ürünleri seçin (yalnızca bu teklifteki ürünler).",
+    lang: "Dil", selectItems: "Ürünler", already: "daha önce gönderildi", delivered: "Gönderildi",
+    warnTitle: "Daha Önce Gönderilen Ürünler", warnBody: "Aşağıdaki ürünler daha önce irsaliye ile gönderildi. Devam etmek istiyor musunuz?",
+    continue: "Devam Et", create: "Oluştur & İndir", cancel: "İptal", none: "Lütfen en az bir ürün seçin.",
+    createBtn: "İrsaliye", statusTitle: "Sevkiyat Durumu", notDelivered: "Bekliyor",
+  },
+};
 
 const STATUS_KEYS = ["taslak", "gonderildi", "kabul", "red", "suresi_doldu"];
 
 export default function QuoteView() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { id } = useParams();
   const navigate = useNavigate();
   const [quote, setQuote] = useState(null);
@@ -46,6 +65,12 @@ export default function QuoteView() {
   const [waOpen, setWaOpen] = useState(false);
   const [waNumber, setWaNumber] = useState("");
   const [waMessage, setWaMessage] = useState("");
+
+  const [dnOpen, setDnOpen] = useState(false);
+  const [dnLang, setDnLang] = useState("de");
+  const [dnSel, setDnSel] = useState(new Set());
+  const [dnWarn, setDnWarn] = useState(false);
+  const [dnData, setDnData] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -246,6 +271,35 @@ export default function QuoteView() {
     }
   };
 
+  const dnx = DN_L[lang] || DN_L.tr;
+  const deliveredSet = new Set(quote?.delivered_items || []);
+
+  const openDn = () => { setDnSel(new Set()); setDnWarn(false); setDnLang(lang === "tr" ? "tr" : "de"); setDnOpen(true); };
+  const toggleDnItem = (i) => setDnSel((s) => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); setDnWarn(false); return n; });
+
+  const doCreateDeliveryNote = async () => {
+    const idxs = Array.from(dnSel).sort((a, b) => a - b);
+    if (!idxs.length) { toast.error(dnx.none); return; }
+    const hasDelivered = idxs.some((i) => deliveredSet.has(i));
+    if (hasDelivered && !dnWarn) { setDnWarn(true); return; }
+    setGenerating(true);
+    try {
+      const r = await api.post(`/quotes/${id}/delivery-note`, { indexes: idxs });
+      const chosen = idxs.map((i) => quote.items[i]);
+      setDnData({ deliveryNo: r.data.delivery_no, items: chosen, lang: dnLang });
+      await new Promise((res) => setTimeout(res, 500));
+      const pdf = await generatePdf("delivery-note-root");
+      pdf.save(`${dnLang === "tr" ? "Irsaliye" : "Lieferschein"}-${r.data.delivery_no}.pdf`);
+      setDnOpen(false); setDnWarn(false); setDnSel(new Set());
+      await load();
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setGenerating(false);
+      setDnData(null);
+    }
+  };
+
   const revise = async () => {
     try {
       const r = await api.post(`/quotes/${id}/revise`);
@@ -341,6 +395,64 @@ export default function QuoteView() {
         </DropdownMenu>
         <Button variant="outline" onClick={() => window.print()} data-testid="print-btn"><Printer size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.print")}</Button>
 
+        <Dialog open={dnOpen} onOpenChange={setDnOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" onClick={openDn} className="border-brand/40 text-brand hover:bg-brand-light" data-testid="delivery-note-btn">
+              <Truck size={14} strokeWidth={1.5} className="mr-2" /> {dnx.createBtn}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="delivery-note-dialog">
+            <DialogHeader><DialogTitle className="font-heading">{dnx.title}</DialogTitle><DialogDescription>{dnx.subtitle}</DialogDescription></DialogHeader>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Label className="text-sm">{dnx.lang}</Label>
+                <Select value={dnLang} onValueChange={setDnLang}>
+                  <SelectTrigger className="w-40 h-9" data-testid="dn-lang"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                    <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="border border-zinc-200 rounded-lg divide-y divide-zinc-100">
+                {(quote.items || []).map((it, i) => {
+                  const isDel = deliveredSet.has(i);
+                  return (
+                    <label key={i} className="flex items-center gap-3 p-2.5 cursor-pointer hover:bg-zinc-50" data-testid={`dn-item-${i}`}>
+                      <Checkbox checked={dnSel.has(i)} onCheckedChange={() => toggleDnItem(i)} data-testid={`dn-check-${i}`} />
+                      {it.image ? <img src={it.image} alt="" className="w-9 h-9 object-contain rounded border border-zinc-200 bg-white" /> : <div className="w-9 h-9 rounded border border-zinc-200 bg-zinc-50" />}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-zinc-900 truncate">{it.title}</div>
+                        <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+                          {it.code && <span className="font-mono">{it.code}</span>}
+                          <span>× {Number(it.quantity) || 0}</span>
+                        </div>
+                      </div>
+                      {isDel && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5 shrink-0" data-testid={`dn-delivered-badge-${i}`}><PackageCheck size={11} />{dnx.delivered}</span>}
+                    </label>
+                  );
+                })}
+              </div>
+              {dnWarn && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3" data-testid="dn-warning">
+                  <div className="flex items-center gap-2 text-amber-800 font-semibold text-sm"><AlertTriangle size={15} />{dnx.warnTitle}</div>
+                  <p className="text-xs text-amber-700 mt-1">{dnx.warnBody}</p>
+                  <ul className="text-xs text-amber-800 mt-2 list-disc pl-5">
+                    {Array.from(dnSel).filter((i) => deliveredSet.has(i)).map((i) => (<li key={i}>{quote.items[i]?.title}</li>))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDnOpen(false)}>{dnx.cancel}</Button>
+              <Button onClick={doCreateDeliveryNote} disabled={generating} className="bg-brand hover:bg-brand-hover text-white" data-testid="dn-create-btn">
+                {generating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Truck size={14} className="mr-2" />}
+                {dnWarn ? dnx.continue : dnx.create}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" data-testid="email-btn"><Mail size={14} strokeWidth={1.5} className="mr-2" /> {t("quoteView.emailSend")}</Button>
@@ -422,10 +534,33 @@ export default function QuoteView() {
               <QuotePDFTemplate quote={translated.quote} customer={customer} company={translated.company || company} lang={translated.lang} priceless={translated.priceless} rootId="quote-pdf-root-translated" />
             </div>
           )}
+          {/* Hidden delivery-note template — rendered on demand for the İrsaliye/Lieferschein PDF */}
+          {dnData && (
+            <div aria-hidden="true" style={{ position: "absolute", left: "-99999px", top: 0, width: "210mm" }}>
+              <DeliveryNoteTemplate deliveryNo={dnData.deliveryNo} items={dnData.items} customer={customer} company={company} lang={dnData.lang} quoteNo={quote.quote_no} rootId="delivery-note-root" />
+            </div>
+          )}
         </div>
 
         {/* Meta sidebar */}
         <aside className="order-1 xl:order-2 xl:sticky xl:top-4 space-y-4" data-testid="quote-meta">
+          {/* Delivery status */}
+          <div className="bg-white border border-zinc-200 p-5" data-testid="delivery-status-card">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-3 flex items-center gap-1.5"><Truck size={13} className="text-brand" />{dnx.statusTitle}</div>
+            <div className="space-y-1.5">
+              {(quote.items || []).map((it, i) => {
+                const isDel = deliveredSet.has(i);
+                return (
+                  <div key={i} className="flex items-center justify-between gap-2 text-sm" data-testid={`delivery-status-item-${i}`}>
+                    <span className="truncate text-zinc-700">{it.title}</span>
+                    {isDel
+                      ? <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5 shrink-0"><PackageCheck size={11} />{dnx.delivered}</span>
+                      : <span className="text-[10px] font-medium text-zinc-500 bg-zinc-100 rounded-full px-2 py-0.5 shrink-0">{dnx.notDelivered}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           {customer && (
             <div className="bg-white border border-zinc-200 p-5">
               <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mb-2">{t("pdf.toCustomer")}</div>

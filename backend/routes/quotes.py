@@ -22,6 +22,10 @@ class PdfShareRequest(BaseModel):
     pdf_base64: str
 
 
+class DeliveryNoteRequest(BaseModel):
+    indexes: list[int]
+
+
 def compute_totals(items, vat_rate: float, discount_rate: float) -> dict:
     subtotal = 0.0
     for it in items:
@@ -258,6 +262,26 @@ def build_quotes_router(db):
         await db.quotes.update_one({"id": quote_id}, {"$set": update})
         q = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
         return q
+
+    @router.post("/{quote_id}/delivery-note")
+    async def create_delivery_note(quote_id: str, body: DeliveryNoteRequest, user=Depends(current_user)):
+        q = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+        if not q:
+            raise HTTPException(status_code=404, detail="Teklif bulunamadı")
+        items = q.get("items", [])
+        valid = [i for i in body.indexes if 0 <= i < len(items)]
+        if not valid:
+            raise HTTPException(status_code=400, detail="Ürün seçilmedi")
+        seq = int(q.get("delivery_note_seq", 0)) + 1
+        delivery_no = f"{q.get('quote_no')}-L{seq}"
+        delivered = sorted(set(q.get("delivered_items", [])) | set(valid))
+        now = datetime.now(timezone.utc).isoformat()
+        await db.quotes.update_one({"id": quote_id}, {"$set": {
+            "delivered_items": delivered,
+            "delivery_note_seq": seq,
+            "updated_at": now,
+        }})
+        return {"delivery_no": delivery_no, "seq": seq, "delivered_items": delivered, "indexes": valid}
 
     @router.post("/{quote_id}/revise")
     async def create_revision(quote_id: str, user=Depends(current_user)):

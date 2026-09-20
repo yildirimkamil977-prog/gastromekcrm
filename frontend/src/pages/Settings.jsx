@@ -121,6 +121,7 @@ export default function Settings() {
                 <div><Label>{t("settings.email")}</Label><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></div>
                 <div><Label>{t("settings.taxOffice")}</Label><Input value={form.tax_office} onChange={(e) => set("tax_office", e.target.value)} /></div>
                 <div><Label>{t("settings.taxNumber")}</Label><Input value={form.tax_number} onChange={(e) => set("tax_number", e.target.value)} /></div>
+                <div><Label>{t("settings.hrbNumber")}</Label><Input value={form.hrb_number || ""} onChange={(e) => set("hrb_number", e.target.value)} placeholder="HRB 23433" data-testid="settings-hrb-number" /></div>
                 <div className="md:col-span-2"><Label>{t("settings.address")}</Label><Textarea rows={2} value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
               </div>
             </TabsContent>

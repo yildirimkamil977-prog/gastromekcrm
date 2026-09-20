@@ -375,6 +375,7 @@ export const translations = {
       notes: "Notizen",
       bankInfo: "Bankverbindung",
       taxNoShort: "St-Nr.: ",
+      hrbNoShort: "HRB-Nr.: ",
       validityFooter: "Dieses Angebot ist gültig bis {date}.",
     },
     users: {
@@ -415,6 +416,7 @@ export const translations = {
       email: "E-Mail",
       taxOffice: "Finanzamt",
       taxNumber: "Steuernummer",
+      hrbNumber: "HRB-Nummer",
       address: "Adresse",
       authorizedPerson: "Verantwortliche Person (erscheint als Signatur im Angebots-PDF)",
       fullNamePlaceholder: "Vor- und Nachname",
@@ -841,6 +843,7 @@ export const translations = {
       notes: "Notlar",
       bankInfo: "Banka Hesap Bilgileri",
       taxNoShort: "VN: ",
+      hrbNoShort: "HRB No: ",
       validityFooter: "Bu teklif {date} tarihine kadar geçerlidir.",
     },
     users: {
@@ -881,6 +884,7 @@ export const translations = {
       email: "E-posta",
       taxOffice: "Vergi Dairesi",
       taxNumber: "Vergi Numarası",
+      hrbNumber: "HRB Numarası",
       address: "Adres",
       authorizedPerson: "Yetkili Kişi (Teklif PDF'inde imza olarak görünecek)",
       fullNamePlaceholder: "Ad Soyad",

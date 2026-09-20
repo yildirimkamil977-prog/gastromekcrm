@@ -1,0 +1,43 @@
+{
+  "summary": "Verified QuotePDFTemplate footer/social layout fix on the quote view page. Login OK, quote 6bb51376... loads (GM-202606-0002 in this env, not GM-202609-0001 mentioned in request). Measured #quote-pdf-root bounding box: width=793.69px, height=1122.52px, pxPerMm=3.779, so root height = 297.00mm (exact A4 single page). Green social strip (#70c800 'gastromek.de') sits at top=164.15mm bottom=172.90mm from #quote-pdf-root top — well within page 1 (<297mm). Grand-total green GESAMTBETRAG box: top=136.44mm bottom=149.32mm. Footer .pdf-section is present (2 pdf-sections found: notes/validity + social strip) but the BANK INFO block does NOT render because company settings have empty bank_name/bank_iban and banks:[] (verified via /api/settings). Therefore the original 'clipped bank footer' cannot be visually reproduced in this environment. Structurally the fix is correct: footer div and SocialStrip both carry className='pdf-section', so the page-slicer safe-break selector 'tbody tr, .pdf-section, .pdf-row' will not cut through them. Both PDF downloads succeeded without JS/console errors: 'Angebot-GM-202606-0002-DE.pdf' (normal) and 'Angebot-GM-202606-0002-DE-ohne-Preise.pdf' (priceless). Priceless template (#quote-pdf-root-priceless) is present in DOM with two .pdf-section elements; bank block absent for the same reason (no bank configured).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "measurements": {
+    "root_width_px": 793.69,
+    "root_height_px": 1122.52,
+    "px_per_mm": 3.7795,
+    "root_height_mm": 297.00,
+    "grand_total_box": {"top_mm": 136.44, "bottom_mm": 149.32},
+    "bank_info_footer": "NOT RENDERED — company has no bank configured (banks:[], bank_name='', bank_iban='')",
+    "social_strip": {"top_mm": 164.15, "bottom_mm": 172.90, "class": "pdf-section", "bg": "#70c800"},
+    "pdf_sections_in_normal_root": 2,
+    "priceless_root": {"height_mm": 297.00, "pdf_sections": 2, "bank_found": false}
+  },
+  "downloads_tested": [
+    {"btn": "download-pdf-de", "file": "Angebot-GM-202606-0002-DE.pdf", "ok": true},
+    {"btn": "download-priceless-de", "file": "Angebot-GM-202606-0002-DE-ohne-Preise.pdf", "ok": true}
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "To visually verify the original bug fix (clipped bank footer), configure a bank in Settings→Company (e.g., DenizBank AG EUR IBAN) so QuotePDFTemplate footer actually renders the BANKVERBINDUNG/BANKA HESAP block. In current environment, banks:[] and bank_name/bank_iban are empty, so the bank block is intentionally suppressed by the template code (line 215: `if (banks.length === 0) return null;`).",
+    "Quote id 6bb51376-3fd7-4430-8b60-e30f3c5879c7 corresponds to GM-202606-0002 (1 item) in this env, not GM-202609-0001 (3 items) as described in the request; ordering/measurements confirmed on this quote and 4 other quotes — all have root height exactly 297mm and social strip above the 297mm boundary."
+  ],
+  "critical_code_review_comments": [
+    "QuotePDFTemplate.jsx line 207 footer div now has className='pdf-section' — good; ensures the page-slicer treats it as an atomic break point.",
+    "SocialStrip (line 278) has className='pdf-section' — good.",
+    "Ordering on page 1 verified: header → parties → items → notes/validity(154-161mm) → footer(bank when present)/validity right → social strip(164-173mm). Grand total 136-149mm, comfortably before footer.",
+    "Root height is exactly 297.00mm which means the template is currently sized to a full A4 page even for a 1-item quote (large empty space). Not a bug, just note."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100% (all measurable checks passed; bank rendering untestable due to empty company bank fields)"},
+  "test_credentials": "admin@arigastro.com / admin123",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "If retesting bank-clipping fix: first POST/PUT /api/settings to set bank_name/bank_iban or banks:[{...}]. Then reload quote and re-measure — bank block should appear inside the footer .pdf-section and its bottom should be <297mm. Login endpoint uses cookie-based session; direct navigation without prior /login flow returns 401. Use dropdown pattern for downloads: click download-pdf-btn to open menu, then click download-pdf-tr or download-pdf-de (same for priceless).",
+  "rca of the issue": "Original bug: bank footer clipped and social strip pushed to page 2. Fix applied by main agent (adding pdf-section class to footer and SocialStrip + reduced margins) is structurally sound; page-slicer in QuoteView.generatePdf uses querySelectorAll('tbody tr, .pdf-section, .pdf-row') as safe break points, and now both blocks are marked so cannot be split. Measured on-screen template height fits exactly 297mm (single A4). Cannot visually confirm bank block since company has no bank entries — but the container that wraps the bank content is the same .pdf-section footer, so it will not be clipped when banks are added."
+}

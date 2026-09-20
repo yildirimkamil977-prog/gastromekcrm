@@ -106,6 +106,7 @@ export default function QuotePDFTemplate({ quote, customer, company, priceless =
           <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{company?.company_name}</div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 4, lineHeight: 1.5 }}>
             {company?.tax_number && <>{t("pdf.taxNoShort")}{company.tax_number} {company.tax_office ? `/ ${company.tax_office}` : ""}<br /></>}
+            {company?.hrb_number && <>{t("pdf.hrbNoShort")}{company.hrb_number}<br /></>}
             {company?.phone}{company?.email && <> · {company.email}</>}
           </div>
         </div>

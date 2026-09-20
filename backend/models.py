@@ -151,6 +151,7 @@ class CompanySettings(BaseModel):
     address: str = "Hörderstr. 288, 58454 Witten"
     tax_office: str = ""
     tax_number: str = ""
+    hrb_number: str = ""
     bank_name: str = ""
     bank_iban: str = ""
     bank_account_holder: str = ""

@@ -1,3 +1,8 @@
+## Round 30 — FIX quote PDF: bank footer clipped + green social strip overflow (2026-06-XX)
+- BUG: in normal & priceless quote PDFs the bank-info footer was clipped and the green social strip spilled to page 2 despite room. Cause: QuoteView.generatePdf page-slicer uses safe break points from 'tbody tr, .pdf-section, .pdf-row'; the footer (bank) block and SocialStrip had no such class, so a page cut sliced through them; plus large vertical margins pushed content past one A4 page.
+- FIX (QuotePDFTemplate.jsx): added className='pdf-section' to the footer (bank) block AND the SocialStrip (atomic → never split). Reduced margins: parties 16→12, items table 20→14, notes 24→16, footer 28→18, social 18→12.
+- Verified (iteration_22): #quote-pdf-root = exactly 297.00mm (single A4), social strip at 164–173mm (well within page 1), both PDF downloads OK, 2 pdf-sections present in normal & priceless. NOTE: preview company has NO bank configured so the bank block itself couldn't be visually reproduced; production has banks (DenizBank AG EUR) and the same .pdf-section footer guarantees it won't be clipped.
+
 ## Round 29 — Inventory: EUR default, brand field+filter, empty-stock filter (2026-06-XX)
 - New product default currency now EUR (emptyProduct.currency='EUR'; backend create default 'EUR').
 - Added BRAND to inventory: from-catalog copies catalog brand; Add/Edit dialog brand input (inventory-brand); brand shown under name in table.
