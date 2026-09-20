@@ -1,5 +1,5 @@
 import React from "react";
-import { formatDate, formatMoney, API_URL } from "../lib/api";
+import { formatDate, formatMoney, API_URL, fullAddress } from "../lib/api";
 import { useT, createTranslator } from "../i18n/LanguageContext";
 
 /**
@@ -95,7 +95,7 @@ export default function QuotePDFTemplate({ quote, customer, company, priceless =
           <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{customer?.company_name || "-"}</div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 4, lineHeight: 1.5 }}>
             {customer?.contact_person && <>{customer.contact_person}<br /></>}
-            {customer?.address}
+            {fullAddress(customer)}
             {customer?.tax_number && <><br />{t("pdf.taxNoShort")}{customer.tax_number} {customer.tax_office ? `/ ${customer.tax_office}` : ""}</>}
             {customer?.phone && <><br />{t("pdf.tel")}{customer.phone}</>}
             {customer?.email && <><br />{customer.email}</>}

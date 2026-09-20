@@ -56,3 +56,12 @@ export function formatDate(iso) {
     return iso;
   }
 }
+
+// Full address = street address + city + country (skips empty parts).
+export function fullAddress(entity) {
+  if (!entity) return "";
+  return [entity.address, entity.city, entity.country]
+    .map((p) => (p || "").trim())
+    .filter(Boolean)
+    .join(", ");
+}

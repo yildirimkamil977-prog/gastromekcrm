@@ -47,6 +47,7 @@ class CustomerBase(BaseModel):
     email: Optional[str] = ""
     address: Optional[str] = ""
     city: Optional[str] = ""
+    country: Optional[str] = ""
     notes: Optional[str] = ""
 
 

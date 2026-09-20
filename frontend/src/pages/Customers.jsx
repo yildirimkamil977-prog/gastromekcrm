@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 const EMPTY = {
   company_name: "", tax_number: "", tax_office: "", contact_person: "",
-  phone: "", whatsapp: "", email: "", address: "", city: "", notes: "",
+  phone: "", whatsapp: "", email: "", address: "", city: "", country: "", notes: "",
 };
 const PAGE_SIZE = 20;
 
@@ -189,9 +189,12 @@ export default function Customers() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs text-zinc-500">{t("customers.email")}</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="mt-1" /></div>
-              <div><Label className="text-xs text-zinc-500">{t("customers.city")}</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="mt-1" /></div>
+              <div><Label className="text-xs text-zinc-500">{t("customers.city")}</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="mt-1" data-testid="customer-city" /></div>
             </div>
-            <div><Label className="text-xs text-zinc-500">{t("customers.address")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="mt-1" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs text-zinc-500">{t("customers.country")}</Label><Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} className="mt-1" data-testid="customer-country" /></div>
+              <div><Label className="text-xs text-zinc-500">{t("customers.address")}</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="mt-1" /></div>
+            </div>
             <div><Label className="text-xs text-zinc-500">{t("customers.notes")}</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-1" /></div>
           </form>
           <SheetFooter className="px-6 py-4 border-t border-zinc-200 flex-row gap-2">

@@ -32,6 +32,7 @@ const DN_L = {
     warnTitle: "Bereits gelieferte Positionen", warnBody: "Folgende Positionen wurden bereits per Lieferschein geliefert. Möchten Sie fortfahren?",
     continue: "Fortfahren", create: "Erstellen & Herunterladen", cancel: "Abbrechen", none: "Bitte mindestens eine Position auswählen.",
     createBtn: "Lieferschein", statusTitle: "Lieferstatus", notDelivered: "Offen",
+    addNote: "Notiz hinzufügen", noteLabel: "Hinweise / Besonderheiten", notePlaceholder: "Besondere Hinweise zu dieser Lieferung…",
   },
   tr: {
     title: "İrsaliye Oluştur", subtitle: "Gönderilecek ürünleri seçin (yalnızca bu teklifteki ürünler).",
@@ -39,6 +40,7 @@ const DN_L = {
     warnTitle: "Daha Önce Gönderilen Ürünler", warnBody: "Aşağıdaki ürünler daha önce irsaliye ile gönderildi. Devam etmek istiyor musunuz?",
     continue: "Devam Et", create: "Oluştur & İndir", cancel: "İptal", none: "Lütfen en az bir ürün seçin.",
     createBtn: "İrsaliye", statusTitle: "Sevkiyat Durumu", notDelivered: "Bekliyor",
+    addNote: "Not Ekle", noteLabel: "Notlar / Özel Durumlar", notePlaceholder: "Bu sevkiyata özel notlar…",
   },
 };
 
@@ -71,6 +73,8 @@ export default function QuoteView() {
   const [dnSel, setDnSel] = useState(new Set());
   const [dnWarn, setDnWarn] = useState(false);
   const [dnData, setDnData] = useState(null);
+  const [dnNote, setDnNote] = useState("");
+  const [dnShowNote, setDnShowNote] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -274,7 +278,7 @@ export default function QuoteView() {
   const dnx = DN_L[lang] || DN_L.tr;
   const deliveredSet = new Set(quote?.delivered_items || []);
 
-  const openDn = () => { setDnSel(new Set()); setDnWarn(false); setDnLang(lang === "tr" ? "tr" : "de"); setDnOpen(true); };
+  const openDn = () => { setDnSel(new Set()); setDnWarn(false); setDnNote(""); setDnShowNote(false); setDnLang(lang === "tr" ? "tr" : "de"); setDnOpen(true); };
   const toggleDnItem = (i) => setDnSel((s) => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); setDnWarn(false); return n; });
 
   const doCreateDeliveryNote = async () => {
@@ -286,7 +290,7 @@ export default function QuoteView() {
     try {
       const r = await api.post(`/quotes/${id}/delivery-note`, { indexes: idxs });
       const chosen = idxs.map((i) => quote.items[i]);
-      setDnData({ deliveryNo: r.data.delivery_no, items: chosen, lang: dnLang });
+      setDnData({ deliveryNo: r.data.delivery_no, items: chosen, lang: dnLang, note: dnNote });
       await new Promise((res) => setTimeout(res, 500));
       const pdf = await generatePdf("delivery-note-root");
       pdf.save(`${dnLang === "tr" ? "Irsaliye" : "Lieferschein"}-${r.data.delivery_no}.pdf`);
@@ -433,6 +437,19 @@ export default function QuoteView() {
                   );
                 })}
               </div>
+              {/* Note (İrsaliye-specific, unrelated to quote notes) */}
+              <div>
+                {!dnShowNote ? (
+                  <button type="button" onClick={() => setDnShowNote(true)} className="text-sm font-medium text-brand hover:underline inline-flex items-center gap-1.5" data-testid="dn-add-note-btn">
+                    <PackageCheck size={14} /> {dnx.addNote}
+                  </button>
+                ) : (
+                  <div>
+                    <Label className="text-xs text-zinc-500">{dnx.noteLabel}</Label>
+                    <Textarea rows={3} value={dnNote} onChange={(e) => setDnNote(e.target.value)} placeholder={dnx.notePlaceholder} className="mt-1" data-testid="dn-note-input" />
+                  </div>
+                )}
+              </div>
               {dnWarn && (
                 <div className="rounded-lg border border-amber-300 bg-amber-50 p-3" data-testid="dn-warning">
                   <div className="flex items-center gap-2 text-amber-800 font-semibold text-sm"><AlertTriangle size={15} />{dnx.warnTitle}</div>
@@ -537,7 +554,7 @@ export default function QuoteView() {
           {/* Hidden delivery-note template — rendered on demand for the İrsaliye/Lieferschein PDF */}
           {dnData && (
             <div aria-hidden="true" style={{ position: "absolute", left: "-99999px", top: 0, width: "210mm" }}>
-              <DeliveryNoteTemplate deliveryNo={dnData.deliveryNo} items={dnData.items} customer={customer} company={company} lang={dnData.lang} quoteNo={quote.quote_no} rootId="delivery-note-root" />
+              <DeliveryNoteTemplate deliveryNo={dnData.deliveryNo} items={dnData.items} customer={customer} company={company} lang={dnData.lang} quoteNo={quote.quote_no} note={dnData.note} rootId="delivery-note-root" />
             </div>
           )}
         </div>
