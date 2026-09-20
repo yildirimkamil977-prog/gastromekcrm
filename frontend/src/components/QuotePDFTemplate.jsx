@@ -89,7 +89,7 @@ export default function QuotePDFTemplate({ quote, customer, company, priceless =
       </div>
 
       {/* Parties */}
-      <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+      <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
         <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 6, padding: 12 }}>
           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8" }}>{t("pdf.toCustomer")}</div>
           <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{customer?.company_name || "-"}</div>
@@ -112,7 +112,7 @@ export default function QuotePDFTemplate({ quote, customer, company, priceless =
       </div>
 
       {/* Items */}
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 20, fontSize: 10 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 14, fontSize: 10 }}>
         <thead>
           <tr style={{ background: "#70c800", color: "#fff" }}>
             <th style={{ padding: "8px 6px", textAlign: "left", width: 40 }}>#</th>
@@ -197,14 +197,14 @@ export default function QuotePDFTemplate({ quote, customer, company, priceless =
 
       {/* Notes */}
       {!priceless && notes && (
-        <div style={{ marginTop: 24, padding: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+        <div className="pdf-section" style={{ marginTop: 16, padding: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6 }}>
           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: "#94a3b8", marginBottom: 4 }}>{t("pdf.notes")}</div>
           <div style={{ fontSize: 10, color: "#334155", whiteSpace: "pre-wrap" }}>{notes}</div>
         </div>
       )}
 
       {/* Footer */}
-      <div style={{ marginTop: 28, borderTop: "1px solid #e2e8f0", paddingTop: 14, display: "flex", justifyContent: "space-between", gap: 20, fontSize: 9, color: "#64748b" }}>
+      <div className="pdf-section" style={{ marginTop: 18, borderTop: "1px solid #e2e8f0", paddingTop: 12, display: "flex", justifyContent: "space-between", gap: 20, fontSize: 9, color: "#64748b" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           {(() => {
             const banks = (company?.banks && company.banks.length > 0)
@@ -276,8 +276,9 @@ function SocialStrip({ company }) {
 
   return (
     <div
+      className="pdf-section"
       style={{
-        marginTop: 18,
+        marginTop: 12,
         padding: "10px 14px",
         background: "#70c800",
         color: "#ffffff",
