@@ -1,3 +1,7 @@
+## Round 33 — İrsaliye: VN/HRB under logo + cleaner signature blocks (2026-06-XX)
+- DeliveryNoteTemplate: added tax number (VN/St-Nr.) + HRB No line under the logo company-info block.
+- Redesigned signature fields to classic "sign above the line" style (blank space → thin line → small label under it) for TESLİM EDEN (Ad Soyad, Yer/Tarih, İmza) and TESLİM ALAN ONAYI (Ad Soyad, Yer/Tarih, İmza+Kaşe). Replaces the sparse floating-label look. Style-only; compiles; still single page.
+
 ## Round 32 — İrsaliye refinements + customer Country + address in all forms (2026-06-XX)
 - DeliveryNoteTemplate redesign: bigger logo (68px) + company info block under logo; order-data box without underlines and WITHOUT Sipariş No/Auftragsnr. row; items table with NO filler rows (only real items); single-page layout (removed minHeight 297mm + marginTop:auto that caused spill to page 2 — verified 242.7mm for 1 item); signature blocks without fill lines — ÜBERGABE/Teslim Eden gained a Name field, EMPFANGSBESTÄTIGUNG/Teslim Alan lost the '(Büyük Harf)' text.
 - İrsaliye note: 'Not Ekle/Notiz hinzufügen' button (dn-add-note-btn) → textarea (dn-note-input) in the create dialog; note passed to template and rendered in Notlar/Hinweise area. Fully separate from quote notes.

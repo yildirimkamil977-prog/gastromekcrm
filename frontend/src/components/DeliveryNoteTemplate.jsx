@@ -54,8 +54,14 @@ export default function DeliveryNoteTemplate({
 }) {
   const x = L[lang] || L.de;
   const labelSm = { fontSize: 9, color: "#64748b", whiteSpace: "nowrap", fontWeight: 600 };
-  const sigLabel = { fontSize: 9, color: "#64748b", fontWeight: 600, marginBottom: 22 };
-  const sigField = { fontSize: 10, color: "#0f172a", minHeight: 22, display: "flex", alignItems: "flex-end" };
+  const sigTitle = { fontSize: 9, fontWeight: 800, letterSpacing: 1, color: GREEN, marginBottom: 8 };
+  // classic "sign above the line" field: blank space -> thin line -> small label
+  const SigField = ({ label, mt = 26 }) => (
+    <div style={{ marginTop: mt }}>
+      <div style={{ borderBottom: "1px solid #94a3b8", height: 34 }} />
+      <div style={{ fontSize: 9, color: "#64748b", fontWeight: 600, marginTop: 5 }}>{label}</div>
+    </div>
+  );
 
   return (
     <div
@@ -83,6 +89,13 @@ export default function DeliveryNoteTemplate({
             {company?.address && <div>{company.address}</div>}
             {(company?.phone || company?.email) && (
               <div>{company?.phone ? `${x.tel} ${company.phone}` : ""}{company?.email ? `  ·  ${company.email}` : ""}</div>
+            )}
+            {(company?.tax_number || company?.hrb_number) && (
+              <div style={{ marginTop: 2, fontWeight: 600, color: "#334155" }}>
+                {company?.tax_number ? `${x.taxNo} ${company.tax_number}` : ""}
+                {company?.tax_number && company?.hrb_number ? "  ·  " : ""}
+                {company?.hrb_number ? `${x.hrbNo} ${company.hrb_number}` : ""}
+              </div>
             )}
           </div>
         </div>
@@ -169,34 +182,23 @@ export default function DeliveryNoteTemplate({
         </div>
       )}
 
-      {/* Signatures — no fill lines */}
-      <div className="pdf-section" style={{ marginTop: 30 }}>
+      {/* Signatures — clean "sign above the line" style */}
+      <div className="pdf-section" style={{ marginTop: 28 }}>
         <div style={{ fontSize: 9.5, color: "#334155", marginBottom: 16 }}>{x.received}</div>
         <div style={{ display: "flex", gap: 28 }}>
-          <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 8, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, color: GREEN, marginBottom: 16 }}>{x.handover}</div>
-            <div style={sigLabel}>{x.name}</div>
-            <div style={{ ...sigField, marginBottom: 18 }} />
-            <div style={sigLabel}>{x.placeDate}</div>
-            <div style={sigField} />
-            <div style={{ ...sigLabel, marginTop: 18 }}>{x.signature}</div>
-            <div style={sigField} />
+          <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 8, padding: "16px 18px 18px" }}>
+            <div style={sigTitle}>{x.handover}</div>
+            <SigField label={x.name} mt={20} />
+            <SigField label={x.placeDate} />
+            <SigField label={x.signature} />
           </div>
-          <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 8, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, color: GREEN, marginBottom: 16 }}>{x.confirm}</div>
-            <div style={sigLabel}>{x.nameBlock}</div>
-            <div style={{ ...sigField, marginBottom: 18 }} />
-            <div style={sigLabel}>{x.placeDate}</div>
-            <div style={sigField} />
-            <div style={{ display: "flex", gap: 20, marginTop: 18 }}>
-              <div style={{ flex: 1 }}>
-                <div style={sigLabel}>{x.signature}</div>
-                <div style={sigField} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={sigLabel}>{x.stamp}</div>
-                <div style={sigField} />
-              </div>
+          <div style={{ flex: 1, border: "1px solid #e2e8f0", borderRadius: 8, padding: "16px 18px 18px" }}>
+            <div style={sigTitle}>{x.confirm}</div>
+            <SigField label={x.nameBlock} mt={20} />
+            <SigField label={x.placeDate} />
+            <div style={{ display: "flex", gap: 20 }}>
+              <div style={{ flex: 1 }}><SigField label={x.signature} /></div>
+              <div style={{ flex: 1 }}><SigField label={x.stamp} /></div>
             </div>
           </div>
         </div>
