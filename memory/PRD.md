@@ -1,3 +1,10 @@
+## Round 31 — Delivery Note (İrsaliye/Lieferschein) + HRB No (2026-06-XX)
+- New feature: generate a delivery note from a quote. QuoteView toolbar 'İrsaliye/Lieferschein' button (delivery-note-btn) opens a dialog to pick WHICH quote items to ship (only that quote's items) + language (TR/DE). Generates a bilingual PDF (title İRSALİYE / LIEFERSCHEIN) with signature areas (modern design) via html2canvas and downloads it (Lieferschein-<no>.pdf / Irsaliye-<no>.pdf).
+- Delivered items get a 'Gönderildi/Geliefert' badge; sidebar 'Sevkiyat Durumu/Lieferstatus' card shows shipped vs Offen/Bekliyor per item. Re-selecting an already-delivered item shows a warning + 'Devam Et/Fortfahren' button to proceed anyway.
+- Backend: POST /api/quotes/{id}/delivery-note {indexes} → delivery_no = quote_no+'-L'+seq (auto-increment), stores delivered_items (union) + delivery_note_seq; empty→400.
+- HRB No: CompanySettings.hrb_number added; Settings company tab field (settings-hrb-number); shown in quote PDF + priceless PDF (pdf.hrbNoShort) and delivery-note PDF footer.
+- New files: components/DeliveryNoteTemplate.jsx. Verified: backend curl (seq L1/L2, union, 400) + frontend 100% (iteration_23, 7/7 incl. warning flow, bilingual, HRB in PDF). Test quotes' delivered state reset after testing.
+
 ## Round 30 — FIX quote PDF: bank footer clipped + green social strip overflow (2026-06-XX)
 - BUG: in normal & priceless quote PDFs the bank-info footer was clipped and the green social strip spilled to page 2 despite room. Cause: QuoteView.generatePdf page-slicer uses safe break points from 'tbody tr, .pdf-section, .pdf-row'; the footer (bank) block and SocialStrip had no such class, so a page cut sliced through them; plus large vertical margins pushed content past one A4 page.
 - FIX (QuotePDFTemplate.jsx): added className='pdf-section' to the footer (bank) block AND the SocialStrip (atomic → never split). Reduced margins: parties 16→12, items table 20→14, notes 24→16, footer 28→18, social 18→12.
