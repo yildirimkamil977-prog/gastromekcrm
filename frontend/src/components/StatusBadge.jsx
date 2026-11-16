@@ -9,6 +9,7 @@ const MAP = {
   kabul:        { bg: "#eef8df", text: "#4e8a00", border: "#70c800", bar: "#70c800" },
   red:          { bg: "#fef2f2", text: "#b91c1c", border: "#fecaca", bar: "#f87171" },
   suresi_doldu: { bg: "#fffbeb", text: "#b45309", border: "#fde68a", bar: "#fbbf24" },
+  teslim_edildi:{ bg: "#ecfdf5", text: "#047857", border: "#a7f3d0", bar: "#10b981" },
 };
 
 export const STATUS_KEYS = Object.keys(MAP);

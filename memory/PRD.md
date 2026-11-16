@@ -1,3 +1,7 @@
+## Round 34 — 'Teslim Edildi/Geliefert' quote status + vertical feature chips (2026-06-XX)
+- New quote status 'teslim_edildi' (TR 'Teslim Edildi' / DE 'Geliefert', emerald badge). Added to: backend VALID_STATUSES (quotes.py), StatusBadge MAP, QuoteView STATUS_KEYS, i18n status blocks (both). Verified via curl (PUT status=teslim_edildi persists).
+- QuoteForm item features chips now stack vertically (flex-col items-start) instead of wrapping side-by-side.
+
 ## Round 33 — İrsaliye: VN/HRB under logo + cleaner signature blocks (2026-06-XX)
 - DeliveryNoteTemplate: added tax number (VN/St-Nr.) + HRB No line under the logo company-info block.
 - Redesigned signature fields to classic "sign above the line" style (blank space → thin line → small label under it) for TESLİM EDEN (Ad Soyad, Yer/Tarih, İmza) and TESLİM ALAN ONAYI (Ad Soyad, Yer/Tarih, İmza+Kaşe). Replaces the sparse floating-label look. Style-only; compiles; still single page.

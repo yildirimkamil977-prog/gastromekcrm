@@ -59,6 +59,7 @@ export const translations = {
       kabul: "Angenommen",
       red: "Abgelehnt",
       suresi_doldu: "Abgelaufen",
+      teslim_edildi: "Geliefert",
     },
     table: {
       quoteNo: "Angebotsnr.",
@@ -529,6 +530,7 @@ export const translations = {
       kabul: "Kabul",
       red: "Red",
       suresi_doldu: "Süresi Doldu",
+      teslim_edildi: "Teslim Edildi",
     },
     table: {
       quoteNo: "Teklif No",

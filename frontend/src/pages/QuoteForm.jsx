@@ -463,7 +463,7 @@ function ItemRow({ item, onChange, onRemove, currency }) {
           <ListPlus size={12} strokeWidth={1.5} className="text-brand" /> {t("quoteForm.features")}
           {features.length > 0 && <span className="px-1.5 rounded-full bg-brand-light text-brand font-semibold normal-case tracking-normal">{features.length}</span>}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-col items-start gap-1.5">
           {features.map((f, fi) => (
             <span key={fi} className="inline-flex items-center gap-1 max-w-full pl-2 pr-1 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs text-zinc-700" data-testid={`item-feature-chip-${fi}`}>
               <span className="text-brand font-bold leading-none">•</span>

@@ -44,7 +44,7 @@ const DN_L = {
   },
 };
 
-const STATUS_KEYS = ["taslak", "gonderildi", "kabul", "red", "suresi_doldu"];
+const STATUS_KEYS = ["taslak", "gonderildi", "kabul", "red", "suresi_doldu", "teslim_edildi"];
 
 export default function QuoteView() {
   const { t, lang } = useT();

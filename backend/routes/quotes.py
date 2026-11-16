@@ -15,7 +15,7 @@ from routes.settings import get_settings_doc
 
 logger = logging.getLogger(__name__)
 
-VALID_STATUSES = {"taslak", "gonderildi", "kabul", "red", "suresi_doldu"}
+VALID_STATUSES = {"taslak", "gonderildi", "kabul", "red", "suresi_doldu", "teslim_edildi"}
 
 
 class PdfShareRequest(BaseModel):
