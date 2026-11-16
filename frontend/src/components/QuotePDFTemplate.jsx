@@ -142,9 +142,9 @@ export default function QuotePDFTemplate({ quote, customer, company, priceless =
                   <div style={{ fontWeight: 600 }}>{it.title}</div>
                   {it.description && <div style={{ color: "#475569", marginTop: 2 }}>{it.description}</div>}
                   {Array.isArray(it.features) && it.features.filter((f) => (f || "").trim()).length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "1px 12px", marginTop: 4 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
                       {it.features.filter((f) => (f || "").trim()).map((f, fi) => (
-                        <span key={fi} style={{ fontSize: 9, color: "#475569", lineHeight: 1.45, display: "inline-flex", gap: 4, alignItems: "baseline", whiteSpace: "nowrap" }}>
+                        <span key={fi} style={{ fontSize: 9, color: "#475569", lineHeight: 1.45, display: "flex", gap: 4, alignItems: "baseline" }}>
                           <span style={{ color: "#70c800", fontWeight: 700 }}>•</span>
                           <span>{f}</span>
                         </span>
